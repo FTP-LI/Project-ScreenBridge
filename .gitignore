@@ -1,0 +1,32 @@
+# Local credentials and signing material
+.env
+.env.*
+!.env.example
+*.p12
+*.pfx
+*.key
+*.jks
+*.keystore
+local.properties
+
+# Local scratch work and diagnostics
+/work/
+/.firecrawl/
+*.log
+
+# Generated dependencies and build output
+node_modules/
+oh_modules/
+.hvigor/
+build/
+dist/
+__pycache__/
+*.pyc
+
+# Machine-specific IDE and OS files
+.idea/
+.vs/
+*.user
+*.suo
+.DS_Store
+Thumbs.db
