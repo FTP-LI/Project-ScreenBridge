@@ -8,13 +8,16 @@
 2. [项目目标](PROJECT_GOALS.md)，特别是用户明确要求和未决问题。
 3. [阶段路线图](ROADMAP.md)，从 M0 开始。
 4. [推荐实现方案](RECOMMENDED_APPROACH.md)，包括最新接受的电脑部署原则和两条 USB 验证关口。
+5. [实现目标规划](IMPLEMENTATION_PLAN.md)及[当前 USB 实施清单](superpowers/plans/2026-11-02-usb-foundation.md)，从 G1/U1 继续。
 
 仓库已有 M0 最小 USB 实验源码，位于 `prototypes/usb/`，可构建并签名安装到当前平板。详见[运行说明](../prototypes/usb/README.md)和[本轮验证报告](validation/M0_USB_2026-11-02.md)。它还不能显示扩展桌面，也未完成完整 USB 回传。
 
 ## 在另一台电脑获取工程
 
+当前实施规划在 `m0/usb-prototype`，尚未合入 `main`。新电脑直接获取这个分支：
+
 ```powershell
-git clone https://github.com/FTP-LI/Project-ScreenBridge.git
+git clone --branch m0/usb-prototype https://github.com/FTP-LI/Project-ScreenBridge.git
 cd Project-ScreenBridge
 git status --short --branch
 ```
@@ -22,6 +25,8 @@ git status --short --branch
 若已有克隆，先查看工作区；本地改动妥善保存后，再执行：
 
 ```powershell
+git fetch origin
+git switch m0/usb-prototype
 git pull --ff-only
 ```
 
@@ -30,6 +35,8 @@ git pull --ff-only
 ## 下一次开发先做什么
 
 **最新用户要求：** 已接受电脑一次配置后日常免配置，允许低占用后台监测。平板打开应用/启用后，电脑应自动出现扩展显示器；`start` / `echo` 仅留作诊断工具。见目标 R05/R08/R09。不要再次把首次电脑配置视为尚未获接受的原则问题，实际驱动包仍需合法签名和实测。
+
+**当前下一任务：** 用户已选择主线并要求实现目标规划，G1–G6 和 G1 的 U1–U5 已写入上述计划。开始执行时从 U1 的只读环境/驱动检查开始，不重新发起方案选择，也不跳到界面文案或视频开发。本轮只新增规划，设备和运行行为未改变。
 
 1. 读取报告：实际电脑是七彩虹 Windows 11，平板 MRO-W00/API 24。握手协议版本为 2，切换后身份为 `18d1:2d00`。
 2. 当前阻点：Windows 对新身份仍报代码 28；用户尝试系统 WinUSB 后反馈无法选择或安装失败。后续只读检查发现上次更新向导以 0x4c7（取消）结束，不能认定签名包被拒。按推荐方案核对完整安装包与接口 GUID。用户此前停止了界面控制，本轮只做只读检查。
@@ -42,7 +49,7 @@ git pull --ff-only
 
 ## 给下一次开发会话的上下文
 
-> 先读 AGENTS.md、README.md、目标、路线图、HANDOFF、RECOMMENDED_APPROACH.md 和验证报告。用户已接受一次电脑配置、低占用后台监测；日常接线并打开平板应用后自动出现扩展屏，无需电脑命令。推荐主线为事件驱动助手、WinUSB 原生 USB、Windows IDD 和鸿蒙解码。现有 Python/PyUSB 与 ArkTS 原型通过 12+3 项软件测试，已签名安装，握手版本 2、切到 18d1:2d00，平板已打开配件。但 Windows 仍报代码 28，尚无完整回传或扩展桌面。上次驱动更新向导记录为取消，需完整 INF/CAT 与接口 GUID；还必须独立验证关闭 HDC 的正常模式起连。PD/非PD和低占用都是待验收目标。用户此前停止电脑界面操作，本轮未恢复 UI 控制。不要提交签名材料或设备个人标识。
+> 先读 AGENTS.md、README.md、目标、路线图、HANDOFF、方案、IMPLEMENTATION_PLAN.md 和验证报告。用户已选定一次电脑配置、低占用后台、USB 扩展主线并要求规划目标；无需重新选方案。G1–G6 已定义，下一任务在 docs/superpowers/plans/2026-11-02-usb-foundation.md 的 U1。历史上已有 Python/PyUSB、ArkTS 原型和 12+3 项软件测试、签名 HAP、协议版本 2、配件打开反馈；尚无完整回传或扩展桌面。配件态代码 28 与正常模式无 HDC 起连是两个独立关口；先重新核对当前状态，再按 U1–U5 取得证据。后续 G2 自动监测、G3 显示、G4 视频、G5 安装、G6 验收分别推进。PD/非PD、低占用和 1080p60 都是待验收目标。保留正常签名机制和用户停止界面控制的历史；不提交签名材料或设备个人标识。
 
 ## 前期研究线索
 

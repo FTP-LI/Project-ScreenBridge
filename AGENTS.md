@@ -4,6 +4,8 @@
 
 开始工作前阅读 `README.md`、`docs/PROJECT_GOALS.md`、`docs/ROADMAP.md` 和 `docs/HANDOFF.md`，从当前已记录的状态继续。
 
+主线已由用户选定，执行时继续阅读 `docs/IMPLEMENTATION_PLAN.md` 和其中链接的当前子计划；下一任务为 G1/U1。规划中的目标与已取得的验证证据分别更新。
+
 ## 保留的需求
 
 - 真正的 Windows 扩展桌面，通过普通 USB 数据线连接原生鸿蒙平板应用。

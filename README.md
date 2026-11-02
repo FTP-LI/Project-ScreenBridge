@@ -36,26 +36,32 @@ PD 主要涉及供电协商。USB 数据带宽、接口供电方向和是否支�
 | [USB 实验原型](prototypes/usb/README.md) | 构建、部署、握手和回传测试命令 |
 | [本轮验证记录](docs/validation/M0_USB_2026-11-02.md) | 环境、真实结果、失败记录和后续关口 |
 | [推荐实现方案](docs/RECOMMENDED_APPROACH.md) | 一次配置、低占用后台、自动扩展及硬件输入备选 |
+| [实现目标规划](docs/IMPLEMENTATION_PLAN.md) | G1–G6 里程碑、交付物、依赖和验收门槛 |
+| [下一轮 USB 实施计划](docs/superpowers/plans/2026-11-02-usb-foundation.md) | 从环境与 WinUSB 访问开始的 U1–U5 执行清单 |
 
 ## 当前技术方向
 
 推荐链路为：屏桥助手监听插拔 → 自动建立 USB 会话 → 平板就绪 → Windows IDD 创建独立显示器 → GPU 编码 → USB 数据通道 → 鸿蒙应用解码显示。无显示会话时仅保留事件监测。
 
-用户已接受电脑一次配置和低占用后台；具体架构仍需通过验证，尤其是 WinUSB 访问、无 HDC 的正常模式起连、IDD 和完整画面链路。详见推荐方案。OpenHarmony 文档中的接口不能直接视为目标 HarmonyOS 平板已验证可用。
+用户已接受电脑一次配置和低占用后台，并选定该主线开展实现规划；具体实现仍需通过验证，尤其是 WinUSB 访问、无 HDC 的正常模式起连、IDD 和完整画面链路。当前按总体目标 G1 的 USB 实施计划从 U1 开始；规划完成不代表这些组件已实现。OpenHarmony 文档中的接口不能直接视为目标 HarmonyOS 平板已验证可用。
 
 ## 换电脑继续开发
 
 首次获取工程：
 
+当前原型、推荐方案和实施计划位于 `m0/usb-prototype` 分支，尚未合入 `main`：
+
 ```powershell
-git clone https://github.com/FTP-LI/Project-ScreenBridge.git
+git clone --branch m0/usb-prototype https://github.com/FTP-LI/Project-ScreenBridge.git
 cd Project-ScreenBridge
 git status --short --branch
 ```
 
-已有克隆且工作区干净时更新：
+已有克隆且工作区干净时切换并更新（已有本地分支时直接切换，只有远程分支时 Git 会建立跟踪）：
 
 ```powershell
+git fetch origin
+git switch m0/usb-prototype
 git pull --ff-only
 ```
 
