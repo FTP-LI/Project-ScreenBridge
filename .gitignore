@@ -7,7 +7,12 @@
 *.key
 *.jks
 *.keystore
+*.p7b
+*.cer
+*.csr
 local.properties
+# DevEco writes signing passwords and certificate paths into this local file.
+/prototypes/usb/harmony/build-profile.json5
 
 # Local scratch work and diagnostics
 /work/

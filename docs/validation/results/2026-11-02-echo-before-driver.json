@@ -1,0 +1,9 @@
+{
+  "command": "echo",
+  "ok": false,
+  "timestamp_utc": "2026-11-02T09:31:13Z",
+  "error_type": "RuntimeError",
+  "error": "expected exactly one matching USB device, found 0",
+  "verified_frames": 0,
+  "hint": "If access is denied, release HDC and check this USB identity's driver. No driver was installed by this tool."
+}

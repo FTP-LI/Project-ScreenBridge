@@ -1,0 +1,18 @@
+{
+  "timestamp_utc": "2026-11-02T09:31:48Z",
+  "vid": "18d1",
+  "pid": "2d00",
+  "name": "HDC Device",
+  "status": "Error",
+  "problem_code": 28,
+  "service": null,
+  "driver_inf": null,
+  "compatible_ids": [
+    "USB\\COMPAT_VID_18D1&Class_FF&SubClass_FF&Prot_00",
+    "USB\\COMPAT_VID_18D1&Class_FF&SubClass_FF",
+    "USB\\COMPAT_VID_18D1&Class_FF",
+    "USB\\Class_FF&SubClass_FF&Prot_00",
+    "USB\\Class_FF&SubClass_FF",
+    "USB\\Class_FF"
+  ]
+}
