@@ -49,10 +49,10 @@ PD 主要涉及供电协商。USB 数据带宽、接口供电方向和是否支�
 
 首次获取工程：
 
-当前原型、推荐方案和实施计划位于 `m0/usb-prototype` 分支，尚未合入 `main`：
+当前原型、推荐方案和实施计划已合入 `main`，新电脑从主分支继续开发：
 
 ```powershell
-git clone --branch m0/usb-prototype https://github.com/FTP-LI/Project-ScreenBridge.git
+git clone --branch main https://github.com/FTP-LI/Project-ScreenBridge.git
 cd Project-ScreenBridge
 git status --short --branch
 ```
@@ -61,7 +61,7 @@ git status --short --branch
 
 ```powershell
 git fetch origin
-git switch m0/usb-prototype
+git switch main
 git pull --ff-only
 ```
 

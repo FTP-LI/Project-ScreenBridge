@@ -14,10 +14,10 @@
 
 ## 在另一台电脑获取工程
 
-当前实施规划在 `m0/usb-prototype`，尚未合入 `main`。新电脑直接获取这个分支：
+当前实施规划在 `main`，已合入 `main`。新电脑直接获取这个分支：
 
 ```powershell
-git clone --branch m0/usb-prototype https://github.com/FTP-LI/Project-ScreenBridge.git
+git clone --branch main https://github.com/FTP-LI/Project-ScreenBridge.git
 cd Project-ScreenBridge
 git status --short --branch
 ```
@@ -26,7 +26,7 @@ git status --short --branch
 
 ```powershell
 git fetch origin
-git switch m0/usb-prototype
+git switch main
 git pull --ff-only
 ```
 
