@@ -1,0 +1,99 @@
+{
+    "observed_at_utc":  "2026-11-04T07:14:05Z",
+    "query":  {
+                  "vendor_id":  "12d1",
+                  "product_id":  "5000"
+              },
+    "host":  {
+                 "os_caption":  "Microsoft Windows 11 专业工作站版",
+                 "os_version":  "10.0.26200",
+                 "architecture":  "x64"
+             },
+    "tools":  {
+                  "powershell":  {
+                                     "present":  true,
+                                     "version":  "5.1.26100.6584",
+                                     "path":  "Windows PowerShell"
+                                 },
+                  "python":  {
+                                 "present":  true,
+                                 "version":  "3.12.10",
+                                 "path":  "work/venv/Scripts/python.exe"
+                             },
+                  "pyusb":  {
+                                "present":  true,
+                                "version":  "1.3.1",
+                                "path":  ""
+                            },
+                  "node":  {
+                               "present":  true,
+                               "version":  "v24.14.1",
+                               "path":  "C:\\Program Files\\Huawei\\DevEco Studio\\tools\\node\\node.exe"
+                           },
+                  "deveco":  {
+                                 "present":  true,
+                                 "version":  "26.0.0.851",
+                                 "path":  "C:\\Program Files\\Huawei\\DevEco Studio"
+                             },
+                  "visual_studio":  {
+                                        "present":  false,
+                                        "version":  "",
+                                        "path":  "",
+                                        "note":  "Visual Studio and cl.exe were not found"
+                                    },
+                  "windows_sdk_10":  {
+                                         "present":  false,
+                                         "version":  "",
+                                         "path":  "",
+                                         "note":  "default Windows 10 SDK path is absent"
+                                     },
+                  "wdk":  {
+                              "present":  false,
+                              "version":  "",
+                              "path":  "",
+                              "note":  "default Windows 10 WDK path is absent"
+                          },
+                  "signtool":  {
+                                   "present":  false,
+                                   "version":  "",
+                                   "path":  ""
+                               },
+                  "infverif":  {
+                                   "present":  false,
+                                   "version":  "",
+                                   "path":  ""
+                               },
+                  "inf2cat":  {
+                                  "present":  false,
+                                  "version":  "",
+                                  "path":  ""
+                              },
+                  "pwsh":  {
+                               "present":  false,
+                               "version":  "",
+                               "path":  "",
+                               "note":  "PowerShell 7 is optional; this script runs on Windows PowerShell 5.1"
+                           },
+                  "windows_kits_8_1":  {
+                                           "present":  true,
+                                           "version":  "",
+                                           "path":  "C:\\Program Files (x86)\\Windows Kits\\8.1",
+                                           "note":  "Windows Kits 8.1 is not a Windows 11 WDK"
+                                       }
+              },
+    "devices": [{
+    "vendor_id":  "12d1",
+    "product_id":  "5000",
+    "status":  "OK",
+    "class":  "USBDevice",
+    "problem_code":  0,
+    "service":  "WINUSB",
+    "inf":  "winusb.inf",
+    "provider":  "Microsoft",
+    "interface_present":  true,
+    "winusb_compatible_id":  true
+}],
+    "present_count":  1,
+    "can_attempt_access":  true,
+    "hdc_process_running":  false
+}

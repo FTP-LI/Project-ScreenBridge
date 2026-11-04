@@ -51,11 +51,11 @@
 
 **Interfaces:** `Inspect-UsbEnvironment.ps1 -OutputPath <path> -VendorId <uint16> -ProductId <uint16>`；输入为显式目标身份，输出包含 `observed_at_utc`、工具路径/版本、`devices`（VID/PID、问题码、服务、INF、接口是否存在）、`can_attempt_access`。不采集真实序列号；缺工具/设备是记录内容，不伪造可用。
 
-- [ ] 阅读当前报告，重新核实目标是否连接；定位 DevEco/Python、C++、Windows SDK/WDK、InfVerif/Inf2Cat/SignTool。读取指定身份的状态和接口，默认不启动 HDC。
-- [ ] 实现只读检测脚本，仅输出接口存在性及必要状态；临时完整路径若被诊断工具读到，不写入公开 JSON。
-- [ ] 运行 `pwsh -File scripts/windows/Inspect-UsbEnvironment.ps1 -OutputPath work/g1-env.json -VendorId 0x18d1 -ProductId 0x2d00`，审查脱敏及字段。设备未连接或缺工具时，报告明确缺项。
-- [ ] 运行现有 `./work/venv/Scripts/python.exe -m unittest discover -s prototypes/usb/host -v` 和 `& 'C:\Program Files\Huawei\DevEco Studio\tools\node\node.exe' --test prototypes/usb/harmony/test-protocol.mjs`，记录本轮实际基线，不直接复制历史通过数。
-- [ ] 将脱敏摘要写入报告；形成独立提交。U1 完成只表示诊断就绪，不勾选 USB 通过。
+- [x] 阅读当前报告，重新核实目标是否连接；定位 DevEco/Python、C++、Windows SDK/WDK、InfVerif/Inf2Cat/SignTool。读取指定身份的状态和接口，默认不启动 HDC。2026-11-04：配件身份未枚举，当前连接为 `12d1:5000`；签名和 WDK 工具缺失。
+- [x] 实现只读检测脚本，仅输出接口存在性及必要状态；临时完整路径若被诊断工具读到，不写入公开 JSON。
+- [x] 运行检查脚本并审查脱敏字段。本机没有 PowerShell 7，改由 Windows PowerShell 5.1 执行同一脚本；`18d1:2d00` 缺设备，已在报告中写明。
+- [x] 运行现有 Python 与 Node 协议测试。本轮结果为 12 项和 3 项通过。
+- [x] 将脱敏摘要写入报告；形成独立提交。报告已写入 `docs/validation/G1_USB_ACCESS.md`。U1 只表示诊断就绪，不勾选 USB 通过。
 
 ### U2：建立可访问的 WinUSB 配件接口
 

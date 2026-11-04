@@ -1,0 +1,11 @@
+{
+  "command": "list",
+  "ok": true,
+  "timestamp_utc": "2026-11-04T07:14:33Z",
+  "devices": [
+    {
+      "vid": "12d1",
+      "pid": "5000"
+    }
+  ]
+}

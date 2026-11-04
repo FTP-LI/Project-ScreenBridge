@@ -4,7 +4,7 @@
 
 开始工作前阅读 `README.md`、`docs/PROJECT_GOALS.md`、`docs/ROADMAP.md` 和 `docs/HANDOFF.md`，从当前已记录的状态继续。
 
-主线已由用户选定，执行时继续阅读 `docs/IMPLEMENTATION_PLAN.md` 和其中链接的当前子计划；下一任务为 G1/U1。规划中的目标与已取得的验证证据分别更新。
+主线已由用户选定，执行时继续阅读 `docs/IMPLEMENTATION_PLAN.md` 和其中链接的当前子计划。G1/U1 诊断已完成；下一任务为 U2，但在 Windows 11 SDK/WDK 与 INF 签名工具可用或已有可信签名包之前暂停安装。规划中的目标与已取得的验证证据分别更新。
 
 ## 保留的需求
 
