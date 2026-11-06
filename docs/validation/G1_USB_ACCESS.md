@@ -2,13 +2,15 @@
 
 ## 当前结论
 
-2026-11-04 上午的 U1 只读诊断里，平板当时枚举为调试身份 `12d1:5000`，配件身份没有出现。同一天晚些时候已安装限定配件身份的 WinUSB 包，握手后设备变为 `18d1:2d00` 且问题码 0。随后 100 帧和 140 帧边界回传都已在这台配件上校验通过。换端口、重启保留、传输中拔线和无 HDC 的正常模式起连仍未做。细节见下文。
+2026-11-04 上午的 U1 只读诊断里，平板当时枚举为调试身份 `12d1:5000`，配件身份没有出现，签名工具也未就绪；以下 U1 段落记录的是当时的状态，不代表本机当前条件。同一天晚些时候工具补齐，安装了限定配件身份的 WinUSB 包，握手后设备变为 `18d1:2d00` 且问题码 0。随后 100 帧、140 帧边界、重开后 140 帧和 60 秒连续回传都已在这台配件上校验通过。配件态访问、接口 GUID 与标准用户打开接口不再列为未验证项。
 
-调试身份问题码 0，服务为 WINUSB，驱动为 Microsoft `winusb.inf`，设备接口存在，兼容 ID 含 `USB\MS_COMP_WINUSB`。本轮 libusb 只列出这一台 `12d1:5000`。这只说明当前用户会话能枚举调试身份，不是配件回传，也不是 echo 通过。
+换端口、重启保留、传输中拔线和平板停止后的恢复、无 HDC 的正常模式起连仍未做，Windows 扩展桌面也未通过。细节见下文与 [2026-11-06 只读复查](#2026-11-06-只读复查)。
 
-本机没有 Visual Studio / `cl.exe`、Windows 10 SDK、WDK、SignTool、InfVerif、Inf2Cat。`C:\Windows\INF` 中没有匹配 `VID_18D1&PID_2D00` 或 `VID_18D1&PID_2D01` 的 INF。U2 因此暂停实际安装。缺工具不是签名拒绝，也不是安装通过。
+调试身份问题码 0，服务为 WINUSB，驱动为 Microsoft `winusb.inf`，设备接口存在，兼容 ID 含 `USB\MS_COMP_WINUSB`。U1 当时 libusb 只列出这一台 `12d1:5000`。这只说明当时用户会话能枚举调试身份，不是配件回传，也不是 echo 通过。
 
-U1 只表示诊断就绪。没有勾选 USB 通道通过，没有切换配件模式，没有启动 HDC，没有改动驱动。
+2026-11-04 上午检查时本机没有 Visual Studio / `cl.exe`、Windows 10 SDK、WDK、SignTool、InfVerif、Inf2Cat，`C:\Windows\INF` 中也没有配件身份的匹配 INF，U2 因此一度暂停安装；当天晚些时候补齐工具后才完成 U2。缺工具不是签名拒绝，也不是安装通过。
+
+U1 当时只表示诊断就绪，没有勾选 USB 通道通过，没有切换配件模式，没有启动 HDC，没有改动驱动；后续 U2/U3 的真机结果按时间记在本文对应章节。
 
 ## 设备和工具
 
@@ -55,11 +57,11 @@ $env:SCREENBRIDGE_LIBUSB = 'C:\Program Files\Huawei\DevEco Studio\sdk\default\op
 
 ## 仍未验证
 
-- 配件态 `18d1:2d00` 的驱动、接口 GUID、标准用户打开和 echo。
-- 关闭 HDC/调试后的正常模式起连。
-- 跨端口、重启后的绑定保留。
-- 30 分钟持续传输、20 次插拔、PD 与线速。
-- Windows 扩展桌面。
+- 传输中拔线、平板停止后的恢复与下一轮重连。
+- 关闭 HDC/调试后的正常模式起连（U4）。
+- 换端口、重启后的绑定保留。
+- 30 分钟持续传输、两类端口各 20 次插拔、PD 与线速。
+- Windows 扩展桌面、驱动图像交接与完整画面链路。
 
 历史问题码 28 仍然只属于 2026-11-02 的配件身份记录。本轮设备不在那个身份上，不能把“当前未枚举”写成问题码已经消失或驱动已经修好。
 
@@ -97,4 +99,32 @@ $env:SCREENBRIDGE_LIBUSB = 'C:\Program Files\Huawei\DevEco Studio\sdk\default\op
 
 ## 下一步
 
-边界回传和这次 60 秒连续回传已通过。传输中拔线没有发生。下一次仍要在持续发送时拔掉数据线，再插回并重新打开配件。无 HDC 的正常模式还要另一次关闭 USB 调试。这两项都还没有证据。
+边界回传、重开后的 140 帧和 60 秒连续回传已通过。传输中拔线没有发生。下一次仍要在持续发送时拔掉数据线，再插回并重新打开配件；平板停止后也要单独记录错误与恢复。无 HDC 的正常模式还要另一次关闭 USB 调试与 HDC 的起连。这两类动作都需要用户配合，可复现命令与步骤见[原型 README 的下一轮实机配合清单](../../prototypes/usb/README.md)，当前设备状态见下文复查记录。
+
+## 2026-11-06 只读复查
+
+本轮只做环境、仓库与软件基线检查，没有连接平板、没有安装或卸载驱动、没有新增真机通过项。
+
+| 项目 | 观察结果 |
+| --- | --- |
+| 在线 USB 设备 | `Get-PnpDevice -PresentOnly` 未列出 `12d1`/`18d1` 或 ScreenBridge 设备；历史设备记录状态为 Unknown，不能当作已连接 |
+| HDC 进程 | 未运行 |
+| 屏桥显示器 | `ScreenBridge Display` 未接入桌面（状态 Unknown） |
+| 驱动库 | `oem121.inf`（USB，Provider ScreenBridge）与多个 IDD 版本包仍在；签名者均为 `ScreenBridge Development` 本机自签 |
+| 构建工具 | `C:\Program Files (x86)\Windows Kits\10` 与 VS 2022 BuildTools 目录存在，11-04 上午的“工具缺失”已不是当前状态 |
+| 实验环境 | `work/venv/Scripts/python.exe`（Python 3.12.10）、DevEco 内置 Node 均可用 |
+
+软件测试基线（本轮实际运行，不是沿用历史计数）：
+
+```powershell
+.\work\venv\Scripts\python.exe -m unittest discover -s prototypes/usb/host -v
+.\work\venv\Scripts\python.exe -m unittest discover -s tests/windows/helper -v
+.\work\venv\Scripts\python.exe -m unittest discover -s tests/windows/streaming -v
+& 'C:\Program Files\Huawei\DevEco Studio\tools\node\node.exe' --test prototypes/usb/harmony/test-protocol.mjs
+```
+
+结果：`prototypes/usb/host` 23 项、`tests/windows/helper` 27 项、`tests/windows/streaming` 7 项、平板协议 6 项，全部通过，无失败或跳过。这些是可注入端点与本地协议测试，不能代替拔线恢复、正常模式起连或画面链路的真机验收。
+
+仓库整理：`g1-usb-access` 的最新工作（含 11-04 之后的源码与证据）已快进合入 `main`；误入库的 `*.obj`、`*.dll`、`*.exe`、TMH、MAP 等构建产物已从版本库移除并加入 `.gitignore`，本地文件保留。此前 README/HANDOFF 中“从 main 继续”的说明在合并前会丢工作，现已与 `main` 的实际内容一致。
+
+结论：`accessory_access_passed` 与 `echo_passed` 已有真机证据；`normal_mode_bootstrap_passed`、`cross_port_retention_passed` 仍为 `not_tested`。开始 U3 剩余项和 U4 前，需要用户重新接线、在平板上打开屏桥，并按步骤关闭 USB 调试。

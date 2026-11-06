@@ -2,7 +2,7 @@
 
 让鸿蒙平板通过普通 USB 数据线成为 Windows 电脑的扩展屏，同时将支持 PD 和不支持 PD 的电脑 USB 数据接口纳入兼容目标。
 
-**当前状态：M0 技术验证进行中，已有最小 USB 实验源码和可签名安装的平板应用，尚无扩展屏或发布版本。** 2026-11-02 完成配件握手和模式切换。2026-11-04 复查时平板以调试身份连接，配件身份未枚举，驱动签名工具仍未就绪。完整回传与 Windows 驱动条件见[11 月 2 日验证报告](docs/validation/M0_USB_2026-11-02.md)和[G1 诊断](docs/validation/G1_USB_ACCESS.md)。下文的完整产品能力仍是目标。
+**当前状态：M0 技术验证进行中，尚无扩展屏或发布版本。** 2026-11-02 完成配件握手和模式切换；2026-11-04 在配件身份 `18d1:2d00` 上完成 100 帧、140 帧边界和 60 秒连续双向回传，屏桥 IDD 曾以非主屏接入本机桌面。无 HDC 的正常模式起连、自动连接、驱动图像交接、完整画面链路和一次配置的跨端口保留仍未通过。证据见 [G1 USB 访问验证](docs/validation/G1_USB_ACCESS.md)、[G3 屏桥显示器验证](docs/validation/G3_IDD_2026-11-04.md) 和 [11 月 2 日验证报告](docs/validation/M0_USB_2026-11-02.md)。下文的完整产品能力仍是目标。
 
 ## 产品与命名
 
@@ -34,23 +34,24 @@ PD 主要涉及供电协商。USB 数据带宽、接口供电方向和是否支�
 | [开发交接](docs/HANDOFF.md) | 换电脑后的恢复步骤、下一步任务和研究资料 |
 | [协作说明](AGENTS.md) | 后续开发者与 AI 助手应保留的项目边界 |
 | [USB 实验原型](prototypes/usb/README.md) | 构建、部署、握手和回传测试命令 |
-| [本轮验证记录](docs/validation/M0_USB_2026-11-02.md) | 环境、真实结果、失败记录和后续关口 |
-| [G1 USB 诊断](docs/validation/G1_USB_ACCESS.md) | 2026-11-04 只读环境、当前 USB 身份和签名工具缺口 |
+| [首轮验证记录](docs/validation/M0_USB_2026-11-02.md) | 早期环境、真实结果、失败记录和后续关口 |
+| [G1 USB 访问验证](docs/validation/G1_USB_ACCESS.md) | WinUSB 安装、真机回传、边界包长、只读复查和未通过项 |
+| [G3 屏桥显示器验证](docs/validation/G3_IDD_2026-11-04.md) | IDD 接入、EDID、图像采样与限制 |
 | [推荐实现方案](docs/RECOMMENDED_APPROACH.md) | 一次配置、低占用后台、自动扩展及硬件输入备选 |
 | [实现目标规划](docs/IMPLEMENTATION_PLAN.md) | G1–G6 里程碑、交付物、依赖和验收门槛 |
-| [下一轮 USB 实施计划](docs/superpowers/plans/2026-11-02-usb-foundation.md) | 从环境与 WinUSB 访问开始的 U1–U5 执行清单 |
+| [下一轮 USB 实施计划](docs/superpowers/plans/2026-11-02-usb-foundation.md) | U1–U5 执行清单与勾选状态 |
 
 ## 当前技术方向
 
 推荐链路为：屏桥助手监听插拔 → 自动建立 USB 会话 → 平板就绪 → Windows IDD 创建独立显示器 → GPU 编码 → USB 数据通道 → 鸿蒙应用解码显示。无显示会话时仅保留事件监测。
 
-用户已接受电脑一次配置和低占用后台，并选定该主线开展实现规划；具体实现仍需通过验证，尤其是 WinUSB 访问、无 HDC 的正常模式起连、IDD 和完整画面链路。G1/U1 只读诊断已完成，U2 在签名工具或可信签名包就绪前暂停安装。规划完成不代表这些组件已实现。OpenHarmony 文档中的接口不能直接视为目标 HarmonyOS 平板已验证可用。
+用户已接受电脑一次配置和低占用后台，并选定该主线开展实现规划。G1 的 U1 已完成、U2 与 U3 各有真机回传证据，U4（无 HDC 正常模式起连）与 U5（证据汇总）尚未完成；G2/G3/G4 只有软件级原型和本机实验，未形成完整画面链路。规划完成和软件测试通过不代表产品已实现。OpenHarmony 文档中的接口不能直接视为目标 HarmonyOS 平板已验证可用。
 
 ## 换电脑继续开发
 
 首次获取工程：
 
-当前原型、推荐方案和实施计划已合入 `main`，新电脑从主分支继续开发：
+`g1-usb-access` 的最新工作已于 2026-11-06 快进合入 `main`，并清理了误入库的构建产物。换电脑前先确认远端 `main` 已同步，再从主分支继续：
 
 ```powershell
 git clone --branch main https://github.com/FTP-LI/Project-ScreenBridge.git
@@ -66,10 +67,10 @@ git switch main
 git pull --ff-only
 ```
 
-然后按上表顺序阅读文档。M0 原型依赖和构建命令见[原型说明](prototypes/usb/README.md)。本地签名配置不会随 Git 迁移，新电脑先运行构建脚本生成配置，再在 DevEco 配置自己的开发签名。
+然后按上表顺序阅读文档。M0 原型依赖和构建命令见[原型说明](prototypes/usb/README.md)。本地签名配置不会随 Git 迁移，新电脑先运行构建脚本生成配置，再在 DevEco 配置自己的开发签名；USB 与 IDD 驱动包目前都是本机自签，不能当作可发布签名。
 
 ## 许可证
 
 仓库已有 [GNU AGPL v3 许可证](LICENSE)。本次文档整理保留原许可证。依赖选型和发布方式应与仓库许可证一起评估。
 
-记录日期：2026-11-02。
+记录日期：2026-11-06。

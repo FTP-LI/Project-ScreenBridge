@@ -4,7 +4,7 @@
 
 开始工作前阅读 `README.md`、`docs/PROJECT_GOALS.md`、`docs/ROADMAP.md` 和 `docs/HANDOFF.md`，从当前已记录的状态继续。
 
-主线已由用户选定，执行时继续阅读 `docs/IMPLEMENTATION_PLAN.md` 和其中链接的当前子计划。G1/U1 诊断已完成；下一任务为 U2，但在 Windows 11 SDK/WDK 与 INF 签名工具可用或已有可信签名包之前暂停安装。规划中的目标与已取得的验证证据分别更新。
+主线已由用户选定，执行时继续阅读 `docs/IMPLEMENTATION_PLAN.md` 和其中链接的当前子计划。最新真机证据见 `docs/validation/G1_USB_ACCESS.md` 与 `docs/validation/G3_IDD_2026-11-04.md`；当前下一任务为 G1/U3 收尾（传输中拔线、停止恢复与脱敏汇总）和 U4（关闭 USB 调试后的正常模式起连）。规划中的目标与已取得的验证证据分别更新。
 
 ## 保留的需求
 
@@ -17,7 +17,8 @@
 
 ## 事实与验证
 
-- 当前已有 USB 实验源码、协议测试和签名平板应用；握手与配件打开有证据，完整 USB 回传和扩展桌面仍未通过。先读最新验证报告和 `docs/RECOMMENDED_APPROACH.md`，不要回退成只有需求的初始状态。
+- 当前已有 USB 实验源码、协议测试、签名平板应用、WinUSB 包、屏桥 IDD 和连接状态机；配件态握手、标准用户打开接口和真机 echo 回传已有证据。无 HDC 的正常模式起连、自动连接、驱动图像交接、完整画面链路和扩展桌面仍未通过。先读最新验证报告和 `docs/RECOMMENDED_APPROACH.md`，不要回退成只有需求的初始状态。
+- 开发分支 `g1-usb-access` 的最新工作已于 2026-11-06 快进合入 `main`；换电脑前确认 `main` 已推送，不要依赖未推送的本地 checkpoint 提交。
 - 明确标识用户已确认要求、工程建议、未验证假设和真实测试结果。
 - OpenHarmony 文档与实际 HarmonyOS 设备能力分别核对。
 - USB 网络共享、HDC 调试转发和原生 USB 数据通道分别记录，不能互相代替验收。

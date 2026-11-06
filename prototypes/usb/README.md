@@ -2,13 +2,13 @@
 
 开发实验，尚不提供扩展桌面。Windows 主机用 PyUSB/libusb 发送配件控制请求，鸿蒙平板应用使用公开 `usbManager` accessory API 和 `fileIo` 读写。HDC 仅部署应用和读取诊断信息，数据不经过 HDC 转发。
 
-**日常使用目标已明确为“在平板启用，电脑自动出现扩展屏”。** 本页的 `start` 是开发者手动发起 USB 模式切换，`echo` 是校验回传测试，都不是产品操作流程。当前原型还没有自动握手、平板启用控制协议或 Windows 显示驱动；不能把完成这些命令等同于实现扩展屏。
+**日常使用目标已明确为“在平板启用，电脑自动出现扩展屏”。** 本页的 `start` 是开发者手动发起 USB 模式切换，`echo` 是校验回传测试，都不是产品操作流程。当前原型还没有自动握手和平板启用控制协议；Windows 显示驱动、连接状态机在 `drivers/windows/display/`、`apps/windows/helper/` 另有实验源码，不属于本原型。不能把完成这些命令等同于实现扩展屏。
 
 用户现已接受电脑首次配置和低占用后台。后续架构、两种硬件/软件显示方式的区别与验证顺序见[推荐方案](../../docs/RECOMMENDED_APPROACH.md)。
 
 ## 已验证与未验证
 
-详细记录见 [M0 验证报告](../../docs/validation/M0_USB_2026-11-02.md)。协议单元测试、HAP 构建和真机配件协议查询是独立关口；不能用其中一个替代完整 USB 回传成功。PD、供电和 USB 数据速率分别记录。
+详细记录见 [首轮验证报告](../../docs/validation/M0_USB_2026-11-02.md) 和 [G1 USB 访问验证](../../docs/validation/G1_USB_ACCESS.md)。协议单元测试、HAP 构建、真机配件协议查询、WinUSB 安装和真机回传是独立关口；不能用其中一个替代完整画面链路成功。PD、供电和 USB 数据速率分别记录。
 
 ## 开发环境
 
@@ -56,7 +56,7 @@ $pythonExe = './work/venv/Scripts/python.exe'
 
 正常候选结果是出现 `18d1:2d00` 或 `18d1:2d01`。START 成功仅表示控制请求完成，还需检查重枚举、Windows 驱动绑定及应用访问。若设备尚未出现，等数秒再 `list`；本工具不自动安装或替换驱动。
 
-**本轮实际停在这一关口**：Windows 对 `18d1:2d00` 报代码 28，用户尝试选择系统 WinUSB 后反馈无法选择或安装失败。下列 echo 命令已提供，但本机尚无成功回传记录；需要先解决驱动绑定。
+配件态访问已在 2026-11-04 打通：限定 VID/PID 的 `ScreenBridgeUsb.inf`（本机自签）安装为 `oem121.inf`，问题码 0，标准用户可打开接口。11-02 的代码 28 是历史记录。详细安装与恢复命令见 [Windows USB 访问说明](../../drivers/windows/usb/README.md)。
 
 在平板点击“查找配件并开始回传”，允许 USB 配件访问。待显示“已打开配件”后：
 
@@ -72,6 +72,37 @@ $pythonExe = './work/venv/Scripts/python.exe'
 
 测试结束先在平板停止，拔插线回到正常 USB 模式，再用 HDC 检查连接。一次授权是否能跨插拔复用仍待验证。
 
+## 下一轮实机配合清单（U3 收尾与 U4）
+
+以下动作需要用户配合，不能由主机模拟。开始前先接线、解锁平板、确认 `hdc` 未运行，并在平板上打开屏桥实验应用、允许 USB 配件授权。命令均在仓库根目录执行，沿用上节的 `$pythonExe`、`$probe` 与 `SCREENBRIDGE_LIBUSB`。
+
+U3 收尾 —— 拔线与停止恢复：
+
+```powershell
+& $pythonExe $probe echo --count 100 --size 4096 --report work/g1-echo-baseline.json
+& $pythonExe $probe echo --duration 60 --size 4096 --report work/g1-echo-unplug.json
+# 上一命令发送约 5 秒后拔掉数据线；插回、重新打开配件后再执行：
+& $pythonExe $probe echo --count 100 --size 4096 --report work/g1-echo-after-unplug.json
+```
+
+再用“平板点停止”代替拔线，另存 `work/g1-echo-stop.json` 与 `work/g1-echo-after-stop.json`。验收点：错误帧不计入已校验帧数、进程不永久挂起、句柄只关闭一次、重连后基线再次通过。把脱敏结果复制到 `docs/validation/results/`，在 [G1 报告](../../docs/validation/G1_USB_ACCESS.md) 记录后再勾选 U3 第 4、5 项。
+
+U4 —— 无 HDC 的正常模式起连：
+
+1. 在平板关闭 USB 调试，停止本机 HDC，拔插数据线回到日常 USB 模式；不要假定硬件 ID 仍是 `12d1:5000`。
+2. 用只读检查记录初始身份，再把实际 VID/PID 显式传给工具（下方 `0xVVVV`/`0xPPPP` 为占位）：
+
+```powershell
+powershell -NoProfile -File .\scripts\windows\Inspect-UsbEnvironment.ps1 -OutputPath work\g1-u4-normal.json -VendorId 0xVVVV -ProductId 0xPPPP
+& $pythonExe $probe list
+& $pythonExe $probe probe --vid 0xVVVV --pid 0xPPPP --report work/g1-u4-probe.json
+& $pythonExe $probe start --vid 0xVVVV --pid 0xPPPP --report work/g1-u4-start.json
+& $pythonExe $probe list
+& $pythonExe $probe echo --count 100 --size 4096 --report work/g1-u4-echo.json
+```
+
+全程不启动 HDC、不用 HDC 转发；分别记录“线先插”和“平板应用先开”两种顺序。若正常模式无法取得可发布的访问路径，结论写成“配件态回传通过，但正常起连未通过”，保留 G3 独立研究，不把 AOA 标为可用产品通道。
+
 ## 常见结果
 
 | 现象 | 含义与处理 |
@@ -81,9 +112,9 @@ $pythonExe = './work/venv/Scripts/python.exe'
 | GET_PROTOCOL 返回 2 | 固件响应配件握手；不证明应用能够收发 |
 | Access denied / errno 13 | 本轮由 HDC 占用引起；先 `hdc kill`，另查实际设备驱动 |
 | No backend available | 指定与 Python 架构匹配的 libusb DLL；不随仓库分发 SDK DLL |
-| 配件模式无法打开或无驱动 | 保留枚举与驱动信息；需要另行评估绑定方法，不自动替换系统驱动 |
+| 配件模式无法打开或无驱动 | 保留枚举与驱动信息；核对 `oem121.inf` 与接口 GUID，不自动替换系统驱动 |
 | 平板匹配配件数为 0 | 尚未切换或本设备未向应用暴露配件；不改用 HDC 转发伪造通过 |
-| 停止后仍等待读取 | 当前原型的异步读取取消能力未验证；拔线释放，必要时重启应用 |
+| 停止后仍等待读取 | 状态机的取消语义有假传输测试，但平板侧与真机拔线的取消能力未验证；必要时重启应用 |
 
 ## 协议与范围
 
