@@ -5,7 +5,11 @@ import zlib
 
 MAX_PAYLOAD = 65536
 HEADER = struct.Struct("<4sIII")
-CHUNK = 16384
+# The installed tablet app writes at most 16384 bytes per call. Reading exactly
+# that many bytes fills the host buffer and leaves the accessory zero-length
+# packet unread, so the tablet write never returns. Ask for one more packet.
+READ_CHUNK = 16384 + 512
+WRITE_CHUNK = 16384
 
 
 class ProtocolError(Exception):
@@ -45,11 +49,11 @@ class FrameReader:
                     if zlib.crc32(payload) != checksum:
                         raise ProtocolError("CRC32 mismatch")
                     return sequence, payload
-            chunk = self.read(CHUNK, timeout)
+            chunk = self.read(READ_CHUNK, timeout)
             if not chunk:
                 raise ProtocolError("stream closed or zero-length read")
             self.buffer.extend(chunk)
-            if len(self.buffer) > HEADER.size + MAX_PAYLOAD + CHUNK:
+            if len(self.buffer) > HEADER.size + MAX_PAYLOAD + READ_CHUNK:
                 raise ProtocolError("receive buffer limit exceeded")
 
 
@@ -62,7 +66,7 @@ def write_all(write, data, timeout_ms):
     deadline = time.monotonic() + timeout_ms / 1000
     offset = 0
     while offset < len(data):
-        chunk = data[offset:offset + CHUNK]
+        chunk = data[offset:offset + WRITE_CHUNK]
         count = write(chunk, remaining_ms(deadline))
         if count <= 0 or count > len(chunk):
             raise ProtocolError("invalid write progress")

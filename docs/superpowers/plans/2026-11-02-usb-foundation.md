@@ -63,11 +63,11 @@
 
 **Interfaces:** 消费 U1 的实际工具/设备状态；交付 WinUSB 设备接口 GUID、包来源/签名/匹配范围以及标准用户能够打开该接口的证据。GUID 必须写入该目录 README，供 U3 读取；共享 AOA VID/PID 不能充当配对身份。
 
-- [ ] 先核对现有可信签名包能否正确覆盖目标及接口 GUID；如需要新包，在实际工具就绪后生成仅针对验证目标的 INF，注册应用接口和正常用户访问权限。
-- [ ] 确认共享身份的影响范围、原驱动与恢复方法。不能用通配类 FF 或所有华为设备匹配，不能自动替换正在使用的其他 MTP/HDC/显示驱动。
-- [ ] 按已安装工具版本检查 INF 和目录签名，保存准确命令、退出码、签名者及包哈希。构建目录与签名证书不入库。没有可信签名包或工具时，交付源码与明确缺项，暂停实际安装，不将此记成拒签或安装通过。
-- [ ] 在用户已授权的一次配置范围内安装该目标；记录安装前后问题码、服务、INF 与接口变化。安装需要系统授权时按实际权限办理，不重复询问已接受的部署原则。
-- [ ] 用标准用户进程实际打开并关闭目标接口，再换参考端口、重启重插核对保留。不只看设备名称或问题码消失。记录结果并提交脱敏材料。
+- [x] 先核对现有可信签名包能否正确覆盖目标及接口 GUID；如需要新包，在实际工具就绪后生成仅针对验证目标的 INF，注册应用接口和正常用户访问权限。2026-11-04 系统 INF 仍不匹配配件身份，已新增限定 VID/PID 的 `ScreenBridgeUsb.inf`。
+- [x] 确认共享身份的影响范围、原驱动与恢复方法。不能用通配类 FF 或所有华为设备匹配，不能自动替换正在使用的其他 MTP/HDC/显示驱动。调试身份 `12d1:5000` 不在匹配范围内。
+- [x] 按已安装工具版本检查 INF 和目录签名，保存准确命令、退出码、签名者及包哈希。构建目录与签名证书不入库。InfVerif `/w` 与 `/h` 有效，Inf2Cat `10_GE_X64` 无错误。签名者是本机自签 `CN=ScreenBridge Development`，不是公开发布签名。
+- [x] 在用户已授权的一次配置范围内安装该目标；记录安装前后问题码、服务、INF 与接口变化。安装后握手，`18d1:2d00` 问题码 0，INF `oem121.inf`，接口 GUID 已登记。
+- [ ] 用标准用户进程实际打开并关闭目标接口，再换参考端口、重启重插核对保留。当前用户进程已打开并遇到 `USBTimeoutError`，已校验帧数为 0。换端口和重启尚未测试。
 
 ### U3：真实回传与 USB 包边界
 
@@ -77,7 +77,7 @@
 
 `run_echo(transport, *, sizes: tuple[int, ...], count: int, timeout_ms: int, duration_s: float | None = None) -> EchoResult`。定义结果类型字段 `ok: bool`、`verified_frames: int`、`verified_payload_bytes: int`（成功帧负载的单向字节总和）、`elapsed_seconds: float`、`error_type: str | None`。`count` 是每个 sizes 元素的帧数，按给定大小顺序执行；sizes 非空且各值为 1–65,536，count/timeout 为正。`duration_s` 仅允许单一 size，保持现有单大小长测兼容。该函数取得本轮 transport 的关闭责任，finally 关闭；退出上下文或重复 close 不重复释放底层句柄。失败保留已校验数量，`ok=False`，CLI 返回非零。
 
-- [ ] 先写失败行为测试：`test_ambiguous_device_never_writes`、`test_crc_error_is_not_counted_as_verified`、`test_partial_io_reconstructs_frame`、`test_disconnect_closes_once_and_fails`；断言拒绝歧义时发送次数为 0，错误帧不计数，退出路径均关闭资源且重复关闭安全。
+- [x] 先写失败行为测试：`test_ambiguous_device_never_writes`、`test_crc_error_is_not_counted_as_verified`、`test_partial_io_reconstructs_frame`、`test_disconnect_closes_once_and_fails`；断言拒绝歧义时发送次数为 0，错误帧不计数，退出路径均关闭资源且重复关闭安全。2026-11-04 已先看到导入失败，再实现传输层。
 
 计数测试在该测试文件内定义只用于测试的回环 transport（write 收到的字节供 read 返回），并保留关闭计数；核心断言如下，真实 USB 验收另做：
 
@@ -91,9 +91,9 @@ transport.close()
 self.assertEqual(transport.release_count, 1)
 ```
 
-- [ ] 运行 `./work/venv/Scripts/python.exe -m unittest discover -s prototypes/usb/host -p test_accessory_transport.py -v`，确认因新接口缺失失败后，提取最小传输层并实现这些契约；保留既有命令兼容。CLI 新增 `--sizes` 接受逗号分隔的上述整数负载集合，传入 run_echo；与显式 `--size` 或 `--duration` 同时使用应报参数错误，未显式设置的默认 size 不造成冲突。加入 `test_multi_size_count_and_bytes`、`test_duration_rejects_multiple_sizes` 和 `test_invalid_sizes_close_safely`，覆盖数量/字节统计和资源责任。
-- [ ] 运行完整 Python 和共用 TypeScript 测试。只在发现真实或测试可复现的缺陷时改平板协议/生命周期；改动后用 `./prototypes/usb/Build-Harmony.ps1` 重建，按现有签名部署说明安装，签名材料继续忽略。
-- [ ] 真机先做 `usb_probe.py echo --count 100 --size 4096 --report work/g1-echo-basic.json`，再做 `usb_probe.py echo --count 20 --sizes 48,496,1008,4080,16368,65520,65536 --report work/g1-echo-boundaries.json`（均以实验 Python 执行，并按现有说明提供 libusb）。后者预期共 140 个已校验帧，覆盖 64/512/1024 包长及 16 KiB 读取块的整包边界。记录真实端点包长；若挂起，定位短包/零长包与读取超时行为后修复，不跳过边界或静默丢数据。
+- [x] 运行 `./work/venv/Scripts/python.exe -m unittest discover -s prototypes/usb/host -p test_accessory_transport.py -v`，确认因新接口缺失失败后，提取最小传输层并实现这些契约；保留既有命令兼容。CLI 新增 `--sizes` 接受逗号分隔的上述整数负载集合，传入 run_echo；与显式 `--size` 或 `--duration` 同时使用应报参数错误，未显式设置的默认 size 不造成冲突。加入 `test_multi_size_count_and_bytes`、`test_duration_rejects_multiple_sizes` 和 `test_invalid_sizes_close_safely`，覆盖数量/字节统计和资源责任。
+- [x] 运行完整 Python 和共用 TypeScript 测试。本轮 Python 21 项、Node 协议 3 项通过。没有发现需要改平板协议的缺陷，因此没有重建 HAP。
+- [x] 真机先做 `usb_probe.py echo --count 100 --size 4096 --report work/g1-echo-basic.json`，再做 `usb_probe.py echo --count 20 --sizes 48,496,1008,4080,16368,65520,65536 --report work/g1-echo-boundaries.json`（均以实验 Python 执行，并按现有说明提供 libusb）。后者预期共 140 个已校验帧，覆盖 64/512/1024 包长及 16 KiB 读取块的整包边界。记录真实端点包长；若挂起，定位短包/零长包与读取超时行为后修复，不跳过边界或静默丢数据。2026-11-04 两项都通过：100 帧见 `docs/validation/results/2026-11-04-g1-echo-basic.json`；140 帧、3061120 字节、3.297 秒见 `docs/validation/results/2026-11-04-g1-echo-boundaries.json`。出口 `wMaxPacketSize` 为 512。整包帧由主机把最后一字节拆成短写；16384 字节回传曾把零长度包留在主机侧，读取长度改为 16896 后通过。拔线和停止恢复仍未测。
 - [ ] 传输中拔线并重新连接、在平板停止，分别记录错误及下一轮能否恢复。关闭取消语义若不足，以实测决定增加原生可取消 I/O，不能用界面显示“停止”替代实际读写结束。
 - [ ] 脱敏记录：每轮负载、帧数、耗时、错误、端口和线材；提交源码/测试/报告。所有假端点测试通过也不能代替此真机步骤。
 

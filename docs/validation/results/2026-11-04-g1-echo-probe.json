@@ -1,0 +1,14 @@
+{
+  "command": "echo",
+  "ok": false,
+  "timestamp_utc": "2026-11-04T07:44:26Z",
+  "vid": "18d1",
+  "pid": "2d00",
+  "frames": 0,
+  "verified_frames": 0,
+  "verified_payload_bytes": 0,
+  "elapsed_seconds": 3.0,
+  "payload_bytes_each": 64,
+  "roundtrip_payload_mib_per_second": 0.0,
+  "error_type": "USBTimeoutError"
+}

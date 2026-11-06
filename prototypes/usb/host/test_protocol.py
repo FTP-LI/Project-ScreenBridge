@@ -1,7 +1,7 @@
 import struct
 import unittest
 
-from protocol import FrameReader, ProtocolError, encode_frame, verify_echo, write_all
+from protocol import READ_CHUNK, FrameReader, ProtocolError, encode_frame, verify_echo, write_all
 
 
 class ProtocolTests(unittest.TestCase):
@@ -12,6 +12,17 @@ class ProtocolTests(unittest.TestCase):
     def reader(self, chunks):
         iterator = iter(chunks)
         return FrameReader(lambda size, timeout: next(iterator, b""))
+
+    def test_read_request_exceeds_tablet_write(self):
+        seen = []
+
+        def read(size, timeout):
+            seen.append(size)
+            return encode_frame(1, b"abc")
+
+        self.assertEqual(FrameReader(read).read_frame(1000), (1, b"abc"))
+        self.assertGreater(seen[0], 16384)
+        self.assertEqual(seen[0], READ_CHUNK)
 
     def test_fragmented_and_coalesced_frames(self):
         first, second = encode_frame(1, b"abc"), encode_frame(2, b"def")

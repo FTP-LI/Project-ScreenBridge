@@ -62,6 +62,8 @@ $pythonExe = './work/venv/Scripts/python.exe'
 
 ```powershell
 & $pythonExe $probe echo --count 100 --size 4096 --timeout-ms 5000 --report work/echo.json
+# 边界集合与 --size、--duration 互斥。真机回传仍要先打开配件接口。
+& $pythonExe $probe echo --count 20 --sizes 48,496,1008,4080,16368,65520,65536 --report work/echo-boundaries.json
 # 仅在基本回传成功后做长测；在两类端口上分别保存记录。
 & $pythonExe $probe echo --duration 1800 --size 65536 --report work/echo-30min.json
 ```

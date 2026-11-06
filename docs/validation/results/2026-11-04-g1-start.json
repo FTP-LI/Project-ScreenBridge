@@ -1,0 +1,9 @@
+{
+  "command": "start",
+  "ok": true,
+  "timestamp_utc": "2026-11-04T07:43:54Z",
+  "vid": "12d1",
+  "pid": "5000",
+  "protocol_version": 2,
+  "note": "START request completed; re-enumeration and application access still require verification"
+}

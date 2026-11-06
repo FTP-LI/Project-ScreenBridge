@@ -1,0 +1,21 @@
+{
+  "command": "echo",
+  "ok": true,
+  "timestamp_utc": "2026-11-04T12:05:29Z",
+  "vid": "18d1",
+  "pid": "2d00",
+  "frames": 140,
+  "verified_frames": 140,
+  "verified_payload_bytes": 3061120,
+  "elapsed_seconds": 3.265,
+  "payload_sizes": [
+    48,
+    496,
+    1008,
+    4080,
+    16368,
+    65520,
+    65536
+  ],
+  "count_per_size": 20
+}

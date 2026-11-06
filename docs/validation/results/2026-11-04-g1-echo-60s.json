@@ -1,0 +1,14 @@
+{
+  "command": "echo",
+  "ok": true,
+  "timestamp_utc": "2026-11-04T12:05:50Z",
+  "vid": "18d1",
+  "pid": "2d00",
+  "frames": 11782,
+  "verified_frames": 11782,
+  "verified_payload_bytes": 48259072,
+  "elapsed_seconds": 60.0,
+  "payload_bytes_each": 4096,
+  "roundtrip_payload_mib_per_second": 1.5341,
+  "note": "Continuous echo finished with the cable still attached. This is not an unplug recovery result."
+}

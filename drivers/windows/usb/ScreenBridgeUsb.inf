@@ -1,0 +1,39 @@
+;
+; ScreenBridge accessory WinUSB package.
+; Matches only the shared AOA identities used by the experiment.
+; Does not match the HDC identity 12d1:5000 or any other Huawei device.
+;
+
+[Version]
+Signature   = "$Windows NT$"
+Class       = USBDevice
+ClassGuid   = {88BAE032-5A81-49f0-BC3D-A4FF138216D6}
+Provider    = %ManufacturerName%
+CatalogFile = ScreenBridgeUsb.cat
+DriverVer   = 11/04/2026,1.0.0.0
+PnpLockdown = 1
+
+[Manufacturer]
+%ManufacturerName% = Standard,NTamd64
+
+[Standard.NTamd64]
+%DeviceName% = USB_Install, USB\VID_18D1&PID_2D00
+%DeviceName% = USB_Install, USB\VID_18D1&PID_2D01
+
+[USB_Install]
+Include = winusb.inf
+Needs   = WINUSB.NT
+
+[USB_Install.Services]
+Include = winusb.inf
+Needs   = WINUSB.NT.Services
+
+[USB_Install.HW]
+AddReg = Dev_AddReg
+
+[Dev_AddReg]
+HKR,,DeviceInterfaceGUIDs,0x00010000,{331c44be-387b-4621-84a7-f55422e41cfc}
+
+[Strings]
+ManufacturerName = "ScreenBridge"
+DeviceName       = "ScreenBridge USB Accessory"

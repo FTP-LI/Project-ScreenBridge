@@ -1,0 +1,8 @@
+{
+  "command": "probe",
+  "ok": true,
+  "timestamp_utc": "2026-11-04T07:22:39Z",
+  "vid": "12d1",
+  "pid": "5000",
+  "protocol_version": 2
+}
