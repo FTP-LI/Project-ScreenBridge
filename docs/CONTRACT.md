@@ -10,7 +10,7 @@
 
 | 名称 | 定义 | 来源 |
 | --- | --- | --- |
-| SBC1 控制消息 | 12 字节 `struct.Struct("<4sBHB")`：magic `b"SBC1"`、kind（capability=1 / ready=2 / stop=3）、version uint16、flags uint8。`paired=0x01`、`accept=0x02`，`flags>0x03` 非法。版本门槛 `SUPPORTED_CONTROL_VERSION=1` | `apps/windows/helper/control_message.py` |
+| SBC1 控制消息 | **8 字节** `struct.Struct("<4sBHB")`（4+1+2+1）：magic `b"SBC1"`、kind（capability=1 / ready=2 / stop=3）、version uint16、flags uint8。`decode_control` 按 `_PACK.size` 校验长度。`paired=0x01`、`accept=0x02`，`flags>0x03` 非法。版本门槛 `SUPPORTED_CONTROL_VERSION=1` | `apps/windows/helper/control_message.py` |
 | SBP1 传输帧 | 16 字节头 `struct.Struct("<4sIII")`：magic `b"SBP1"` + seq + length + CRC32（IEEE，黄金向量 `123456789 → 0xCBF43926`），全小端。`MAX_PAYLOAD=65536`、`READ_CHUNK=16384+512=16896`、`WRITE_CHUNK=16384` | `prototypes/usb/host/protocol.py` |
 | SBP1 包边界 | 主机读取长度必须大于平板单次写入 16384（故 16896），否则零长度包滞留导致写入不返回；负载加帧头恰为端点整包长度（实测 512）时，把最后一字节单独再写一次以短包收尾。坏帧终止当前会话，不静默恢复 | `accessory_transport.py`、`docs/validation/G1_USB_ACCESS.md` |
 | SBV1 视频消息 | 22 字节头 `struct.Struct("<4sBBIQHH")`：magic `b"SBV1"`、kind（CAPABILITY=1 / FRAGMENT=2 / STOP=3）、flags（`FLAG_KEYFRAME=0x01`）、access_unit、timestamp_us(uint64)、index、count。`MAX_SBP1_PAYLOAD=65536`、`MAX_FRAGMENT_PAYLOAD=65514`、分片数 ≤256；能力负载 `<HHB`(max_width,max_height,max_fps) | `shared/protocol/video_packet.py` |
