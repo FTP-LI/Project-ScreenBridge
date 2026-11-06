@@ -4,7 +4,7 @@
 
 开始工作前阅读 `README.md`、`docs/PROJECT_GOALS.md`、`docs/ROADMAP.md` 和 `docs/HANDOFF.md`，从当前已记录的状态继续。
 
-主线已由用户选定，执行时继续阅读 `docs/IMPLEMENTATION_PLAN.md` 和其中链接的当前子计划。最新真机证据见 `docs/validation/G1_USB_ACCESS.md` 与 `docs/validation/G3_IDD_2026-11-04.md`；当前下一任务为 G1/U3 收尾（传输中拔线、停止恢复与脱敏汇总）和 U4（关闭 USB 调试后的正常模式起连）。规划中的目标与已取得的验证证据分别更新。
+主线已由用户选定，执行时继续阅读 `docs/IMPLEMENTATION_PLAN.md` 和其中链接的当前子计划。最新真机证据见 `docs/validation/G1_USB_ACCESS.md` 与 `docs/validation/G3_IDD_2026-11-04.md`；当前下一任务为 G1/U3 收尾（传输中拔线、停止恢复与脱敏汇总）和 U4（关闭 USB 调试后的正常模式起连）。规划中的目标与已取得的验证证据分别更新。2026-11-06 起按批准的持续开发计划双轨推进：软件轨契约见 `docs/CONTRACT.md`、子计划见 `docs/superpowers/plans/2026-11-06-*.md`，真机轨仍为 U3→U4→U5；废弃 IDD 包清理脚本需管理员会话执行。
 
 ## 保留的需求
 

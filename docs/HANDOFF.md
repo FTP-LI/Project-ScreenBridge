@@ -44,9 +44,9 @@ git pull --ff-only
 3. 平板应用已签名安装，11-04 真机 echo 已通过；11-06 复查时平板未以调试或配件身份在线，需要用户重新接线并在平板上打开屏桥。11-05 早上的 `start` 仍是调试身份 `12d1:5000`，不构成 U4 证据。
 4. 新电脑按原型 README 建立 Python 虚拟环境、运行测试与构建脚本。SDK 使用 DevEco 内置 API 26；鸿蒙侧只用 DevEco Studio 及其内置 SDK，本地签名配置被忽略，不能通过 Git 迁移。
 5. 100 帧、边界帧和 60 秒连测已有证据；下一步先补拔线/停止恢复与正常模式起连，30 分钟长测和两类端口各 20 次插拔统一留到 G6，不重复计算。当前端口 PD 与线速仍未知。
-6. G3 可独立推进图像交接，不能借用机器已有的 Todesk/GameViewer 虚拟显示适配器认定屏桥实现扩展显示。驱动库里还堆着多个旧版本 IDD 包（多个 `oem1xx.inf`），清理前需用户确认，不要擅自删除系统驱动。
+6. G3 可独立推进图像交接，不能借用机器已有的 Todesk/GameViewer 虚拟显示适配器认定屏桥实现扩展显示。驱动库里还堆着 11 个旧版本 IDD 包（`oem122.inf`–`oem137.inf` 中的旧版），持续开发计划已授权清理；用 `scripts/windows/Clean-OldDisplayDrivers.ps1 -Apply` 在管理员会话执行，默认保留 `oem121.inf` 与 `oem138.inf`，只允许删除 Provider=ScreenBridge 的废弃 IDD 包，不碰其他驱动。
 
-需要用户协助的部分是连接平板、切换端口、设备授权和确认实机显示效果。2026-11-06 时平板未连接，开始 U3/U4 前需先接线并在平板上打开应用。不能用模拟输出替代这些结果。
+需要用户协助的部分是连接平板、切换端口、设备授权和确认实机显示效果。2026-11-06 时平板未连接，开始 U3/U4 前需先接线并在平板上打开应用。S0 的废弃 IDD 包清理当前会话不是管理员，请在管理员 PowerShell 中运行 `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\windows\Clean-OldDisplayDrivers.ps1 -Apply`（本机执行策略为 Restricted，进程级 Bypass 不改系统配置；不带 `-Apply` 只预览，默认保留 `oem121.inf` 与 `oem138.inf`）；清理后按 G3 计划回归显示器接入。不能用模拟输出替代这些结果。
 
 ## 给下一次开发会话的上下文
 
