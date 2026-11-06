@@ -35,3 +35,18 @@ __pycache__/
 *.suo
 .DS_Store
 Thumbs.db
+
+# Native driver and C++ build outputs (sources stay tracked)
+/drivers/windows/display/*.obj
+/drivers/windows/display/*.exp
+/drivers/windows/display/*.lib
+/drivers/windows/display/*.map
+/drivers/windows/display/*.tmh
+/drivers/windows/display/*.pdb
+/drivers/windows/display/*.dll
+/drivers/windows/display/*.exe
+/*.obj
+/apps/windows/streaming/frame_slot_test.exe
+
+# Local agent working notes (not part of the product)
+/.workbuddy/
