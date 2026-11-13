@@ -13,6 +13,7 @@
 local.properties
 # DevEco writes signing passwords and certificate paths into this local file.
 /prototypes/usb/harmony/build-profile.json5
+/apps/harmony/*/build-profile.json5
 
 # Local scratch work and diagnostics
 /work/

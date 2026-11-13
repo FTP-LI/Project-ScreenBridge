@@ -1,0 +1,37 @@
+{
+  "observed_at_utc": "2026-11-13T11:02:34.6383775Z",
+  "hdc_process_running": false,
+  "normal_mode": {
+    "vendor_id": "12d1",
+    "product_id": "107e",
+    "initial_problem_code": 39,
+    "initial_problem_status": "0xC000007B",
+    "bootstrap_driver": "ScreenBridgeBootstrapDev.inf (temporary current-user SID ACL)",
+    "published_name": "oem141.inf",
+    "interface_present": true,
+    "winusb_open": true,
+    "get_protocol": 2,
+    "aoa_start": "completed"
+  },
+  "accessory_mode": {
+    "vendor_id": "18d1",
+    "product_id": "2d00",
+    "driver_inf": "oem121.inf",
+    "status": "Started",
+    "interface_present": true,
+    "winusb_open": true,
+    "reenumerated": true
+  },
+  "echo_after_start": {
+    "ok": false,
+    "verified_frames": 0,
+    "error_type": "USBTimeoutError",
+    "reason": "tablet echo app was not active for this control/data pass"
+  },
+  "conclusion": "normal_mode_bootstrap_passed_for_development_binding",
+  "limitations": [
+    "candidate binding is self-signed and current-user development-only",
+    "cross-port retention not tested",
+    "video/control ready path not yet installed on the tablet"
+  ]
+}

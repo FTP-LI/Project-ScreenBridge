@@ -12,6 +12,7 @@ class FakeBackend:
         self.sessions = []
         self.reads = []
         self.writes = []
+        self.controls = []
         self.closes = 0
 
     def open(self, path):
@@ -27,6 +28,10 @@ class FakeBackend:
         self.writes.append((session, pipe_id, bytes(data), timeout_ms))
         return len(data)
 
+    def control(self, session, request_type, request, value, index, data, timeout_ms):
+        self.controls.append((session, request_type, request, value, index, data, timeout_ms))
+        return b"\x02\x00" if isinstance(data, int) else len(data)
+
     def close(self, session):
         self.closes += 1
 
@@ -37,6 +42,8 @@ class WinUsbTransportTests(unittest.TestCase):
         transport = WinUsbTransport.open("\\\\?\\usb#screenbridge", backend=backend)
         self.assertEqual(transport.read(64, 500), b"frame")
         self.assertEqual(transport.write(b"hello", 500), 5)
+        self.assertEqual(transport.control_transfer(0xC0, 51, 0, 0, 2, 500), b"\x02\x00")
+        self.assertEqual(transport.control_transfer(0x40, 52, 0, 0, b"x", 500), 1)
         transport.close()
         transport.close()
         self.assertEqual(backend.closes, 1)
@@ -44,6 +51,8 @@ class WinUsbTransportTests(unittest.TestCase):
             transport.read(64, 500)
         with self.assertRaises(TransportClosed):
             transport.write(b"x", 500)
+        with self.assertRaises(TransportClosed):
+            transport.control_transfer(0xC0, 51, 0, 0, 2, 500)
 
     def test_open_rejects_empty_interface_path(self):
         with self.assertRaises(ValueError):

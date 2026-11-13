@@ -25,6 +25,8 @@ class BootstrapInfTests(unittest.TestCase):
         text = INF.read_text(encoding="utf-8")
         self.assertIn("{331c44be-387b-4621-84a7-f55422e41cfc}", text.lower())
         self.assertIn("DeviceInterfaceGUIDs", text)
+        self.assertIn("A;;GRGW;;;IU", text)
+        self.assertNotIn("A;;GA;;;AU", text)
 
 
 if __name__ == "__main__":

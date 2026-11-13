@@ -3,13 +3,17 @@ import unittest
 from pathlib import Path
 import sys
 import subprocess
+import threading
+import time
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "apps" / "windows" / "helper"))
+sys.path.insert(0, str(ROOT / "prototypes" / "usb" / "host"))
 
 from pairing import PairingStore
 from session_machine import DeviceSeen
 from main import HelperRuntime
+from protocol import encode_frame
 
 
 class FakeBus:
@@ -34,6 +38,7 @@ class FakeSession:
         self.events = []
         self.machine = type("Machine", (), {"paired_keys": set(), "actions": []})()
         self.emit_handshake = False
+        self.control_messages = []
 
     def handle(self, kind, device):
         self.events.append((kind, device))
@@ -42,6 +47,9 @@ class FakeSession:
 
     def stop(self, reason):
         self.events.append(("stop", reason))
+
+    def accept_frame(self, payload):
+        self.control_messages.append(payload)
 
 
 class HelperRuntimeTests(unittest.TestCase):
@@ -101,6 +109,47 @@ class HelperRuntimeTests(unittest.TestCase):
         runtime.start()
         bus.callback("arrive", self.device)
         self.assertIn(("stop", "stop"), session.events)
+
+    def test_accessory_arrival_reads_control_ready_from_injected_transport(self):
+        bus = FakeBus()
+        session = FakeSession()
+        session.machine.phase = "waiting_tablet"
+        session.machine.actions = []
+        ready = encode_frame(7, b"SBC1\x02\x01\x00\x03")
+
+        class ControlTransport:
+            def __init__(self):
+                self.closed = False
+                self.sent = False
+                self.done = threading.Event()
+
+            def read(self, size, timeout_ms):
+                if not self.sent:
+                    self.sent = True
+                    return ready
+                self.done.wait(timeout_ms / 1000)
+                raise TimeoutError("control test stopped")
+
+            def close(self):
+                self.closed = True
+                self.done.set()
+
+        transport = ControlTransport()
+        runtime = HelperRuntime(
+            self.store,
+            bus.subscribe,
+            bus.enumerate_present,
+            session,
+            control_opener=lambda: transport,
+        )
+        runtime.start()
+        bus.callback("arrive", self.device)
+        deadline = time.time() + 1
+        while not session.control_messages and time.time() < deadline:
+            time.sleep(0.01)
+        runtime.stop()
+        self.assertEqual(session.control_messages, [b"SBC1\x02\x01\x00\x03"])
+        self.assertTrue(transport.closed)
 
     def test_runtime_module_imports_from_repository_package(self):
         result = subprocess.run(

@@ -4,7 +4,7 @@
 
 2026-11-04 上午的 U1 只读诊断里，平板当时枚举为调试身份 `12d1:5000`，配件身份没有出现，签名工具也未就绪；以下 U1 段落记录的是当时的状态，不代表本机当前条件。同一天晚些时候工具补齐，安装了限定配件身份的 WinUSB 包，握手后设备变为 `18d1:2d00` 且问题码 0。随后 100 帧、140 帧边界、重开后 140 帧和 60 秒连续回传都已在这台配件上校验通过。配件态访问、接口 GUID 与标准用户打开接口不再列为未验证项。
 
-换端口、重启保留、传输中拔线和平板停止后的恢复仍未做，Windows 扩展桌面也未通过。2026-11-13 的 U4 已实际执行：关闭 USB 调试后设备枚举为 `12d1:107e`，但 Windows 绑定的 Huawei 复合过滤驱动报问题码 39，原生工具无法打开设备，因此正常模式起连判定为 `failed`。细节见下文与 [2026-11-06 只读复查](#2026-11-06-只读复查)。
+换端口、重启保留、传输中拔线和平板停止后的恢复仍未做，Windows 扩展桌面也未通过。2026-11-13 的 U4 分两次记录：第一次观察到 `12d1:107e` 时确认 Huawei 过滤驱动问题码 39；随后用当前用户 SID 限定的临时开发包完成 WinUSB 打开、AOA 重枚举和配件接口重开，正常模式起连在该开发绑定下判定为 `passed`。这不是公开发布签名或跨端口保留结论。细节见下文与 [2026-11-06 只读复查](#2026-11-06-只读复查)。
 
 调试身份问题码 0，服务为 WINUSB，驱动为 Microsoft `winusb.inf`，设备接口存在，兼容 ID 含 `USB\MS_COMP_WINUSB`。U1 当时 libusb 只列出这一台 `12d1:5000`。这只说明当时用户会话能枚举调试身份，不是配件回传，也不是 echo 通过。
 
@@ -61,7 +61,13 @@ $env:SCREENBRIDGE_LIBUSB = 'C:\Program Files\Huawei\DevEco Studio\sdk\default\op
 
 使用 DevEco 内置 `libusb_shared.dll` 的原生探针，显式指定 `12d1:107e`，`probe` 和 `start` 均返回 `expected exactly one matching USB device, found 0`；没有发送 AOA START，也没有修改驱动。脱敏记录见 [U4 结果](results/2026-11-13-u4-normal-12d1-107e.json)，`start` 原始报告见 `work/u4-start-12d1-107e.json`（本地文件）。
 
-本次结论：`accessory_access_passed=passed`、`echo_passed=passed`；`normal_mode_bootstrap_passed=failed`（阻点是当前 Windows 复合过滤驱动，不是 HDC 转发）；`cross_port_retention_passed=not_tested`。下一步需要在本机明确授权后，为 `12d1:107e` 设计并单独验证可回滚的 WinUSB/复合设备驱动绑定，不能直接删除 Huawei 驱动包或把本次失败写成产品兼容结论。
+第一次观察结论：`accessory_access_passed=passed`、`echo_passed=passed`；`normal_mode_bootstrap_passed=failed`（阻点是当前 Windows 复合过滤驱动，不是 HDC 转发）；`cross_port_retention_passed=not_tested`。随后按独立授权完成了下方临时开发绑定重试。
+
+### U4 重试：临时开发绑定（2026-11-13）
+
+在保留 `oem46.inf` 导出件的前提下，先安装只匹配 `12d1:107e` 的临时自签 WinUSB 包。标准用户通过屏桥接口 GUID 打开设备，原生 `WinUsb_ControlTransfer` 的 `GET_PROTOCOL` 返回版本 `2`；主机发送六段身份和 `START` 后，设备重枚举为 `18d1:2d00`，当前 `oem121.inf` 状态为 Started，标准用户再次打开 bulk WinUSB 接口成功。脱敏结果见 [U4 重试结果](results/2026-11-13-u4-normal-bootstrap.json)。
+
+这次重试证明了“关闭调试 → 正常身份 → AOA → 配件身份 → WinUSB 接口”的开发机路径；临时包使用当前开发账户 SID，不能作为发布包。紧接着的 `usb_probe echo` 20 帧测试返回 `USBTimeoutError`、已校验 0 帧，因为平板端当时没有运行回传逻辑；这不撤销正常模式起连结论，也不能替代 U3 真机回传。当前四字段结论为：`accessory_access_passed=passed`、`echo_passed=passed`（历史配件态证据）、`normal_mode_bootstrap_passed=passed_for_development_binding`、`cross_port_retention_passed=not_tested`。
 
 ## 仍未验证
 
@@ -134,4 +140,4 @@ $env:SCREENBRIDGE_LIBUSB = 'C:\Program Files\Huawei\DevEco Studio\sdk\default\op
 
 仓库整理：`g1-usb-access` 的最新工作（含 11-04 之后的源码与证据）已快进合入 `main`；误入库的 `*.obj`、`*.dll`、`*.exe`、TMH、MAP 等构建产物已从版本库移除并加入 `.gitignore`，本地文件保留。此前 README/HANDOFF 中“从 main 继续”的说明在合并前会丢工作，现已与 `main` 的实际内容一致。
 
-结论：`accessory_access_passed` 与 `echo_passed` 已有真机证据；`normal_mode_bootstrap_passed=failed` 的 U4 记录见上文；`cross_port_retention_passed` 仍为 `not_tested`。U4 后续要先解决 `12d1:107e` 的驱动访问并保留可回滚路径，再重复无 HDC 的 AOA 起连。
+结论：`accessory_access_passed` 与 `echo_passed` 已有真机证据；`normal_mode_bootstrap_passed=passed_for_development_binding` 的 U4 重试记录见上文；`cross_port_retention_passed` 仍为 `not_tested`。发布前仍需公开签名、安装回滚和跨端口/重启验证。

@@ -15,7 +15,7 @@ Class       = USBDevice
 ClassGuid   = {88BAE032-5A81-49f0-BC3D-A4FF138216D6}
 Provider    = %ManufacturerName%
 CatalogFile = ScreenBridgeBootstrap.cat
-DriverVer   = 11/13/2026,0.1.0.0
+DriverVer   = 11/13/2026,0.1.0.2
 PnpLockdown = 1
 
 [Manufacturer]
@@ -37,6 +37,7 @@ AddReg = Dev_AddReg
 
 [Dev_AddReg]
 HKR,,DeviceInterfaceGUIDs,0x00010000,{331c44be-387b-4621-84a7-f55422e41cfc}
+HKR,,Security,,"D:P(A;;GA;;;SY)(A;;GA;;;BA)(A;;GRGW;;;IU)"
 
 [Strings]
 ManufacturerName = "ScreenBridge"

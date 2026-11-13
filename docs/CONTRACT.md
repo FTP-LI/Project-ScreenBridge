@@ -36,7 +36,7 @@
 1. **PnP 顺序**：先注册 `CM_Register_Notification`，再枚举一次已连接设备；订阅期间的通知排队，snapshot → queued 顺序回放；按 `device.key` 去重，移除后允许再次到达。回调只投递 `(kind, instance_id)`，问题码与接口存在性在工作线程读取。无设备时阻塞等待，不轮询。
 2. **8 态单会话**：`disconnected / discovered / waiting_reenumeration / needs_setup / waiting_tablet / establishing / running / cleaning`。会话活跃期间异构设备 → `reject_ambiguous`；同一 key 重入不重开；未配对 → `reject_unpaired`；配件态 `problem_code!=0` 或接口缺失 → `needs_setup`，不重试、不反复切模式。
 3. **控制校验**：非 `waiting_tablet` 的控制消息 → `reject_control`；`kind!=ready || version!=1 || !paired || !accept` → `reject_tablet`；`stop` → `cleaning → disconnected`。`capability` 目前按拒绝处理，不是能力协商。
-4. **取消与释放**：`TransferGate` 停止幂等（reason 只设一次）；`run_cancellable` 异常记 `error_type`，**finally 关闭 transport**；被取消或未完成的帧**不计入 verified**；仅当前设备移除时才 `gate.stop("unplug")` 并关闭一次。真实 WinUSB 必须用 OVERLAPPED + `CancelIoEx`/`WinUsb_AbortPipe`，**不能用 UI「停止」代替实际读写结束**。
+4. **取消与释放**：`TransferGate` 停止幂等（reason 只设一次）；`run_cancellable` 异常记 `error_type`，**finally 关闭 transport**；被取消或未完成的帧**不计入 verified**；仅当前设备移除时才 `gate.stop("unplug")` 并关闭一次。真实 WinUSB 必须用 OVERLAPPED + `CancelIoEx`/`WinUsb_AbortPipe`，控制握手使用 `WinUsb_ControlTransfer`，**不能用 UI「停止」代替实际读写结束**。
 5. **close 幂等**：`AccessoryTransport` 用 `_closed` 保证 `releaser()` 只调一次；`run_echo` 在 finally 取得关闭责任；重复 close 或上下文退出不重复释放句柄。
 6. **唯一设备**：`choose()` 命中数 ≠1 抛错；歧义或空匹配时不发送任何数据；空 selector / 空 allowed_ids 拒绝。
 7. **会话就绪才挂屏**：关键帧到达前 `display_connected=False`；打开失败 `machine.stop("stop")` 收回；停止或拔出清掉已标记显示器并释放编解码资源。
@@ -61,7 +61,7 @@
 
 ## 六、回归检查清单
 
-- Python：`prototypes/usb/host`（23 项）、`tests/windows/helper`（27 项）、`tests/windows/streaming`（7 项）。
-- Node：`prototypes/usb/harmony/test-protocol.mjs`（6 项）。
+- Python：`prototypes/usb/host`（23 项）、`tests/windows/helper`（56 项）、`tests/windows/streaming`（7 项）、`tests/windows/usb`（2 项）。
+- Node：`prototypes/usb/harmony/test-protocol.mjs`（6 项）与正式应用控制协议测试（2 项）。
 - C++：`apps/windows/streaming/frame_slot_test.cpp` 编译运行；后续新增 `tests/windows/display/`。
 - 上述均为**软件测试**，不得替代真机验收；真机证据另按 `docs/validation/` 七类分账记录。

@@ -59,6 +59,16 @@ class _WINUSB_PIPE_INFORMATION(ctypes.Structure):
     ]
 
 
+class _WINUSB_SETUP_PACKET(ctypes.Structure):
+    _fields_ = [
+        ("RequestType", ctypes.c_ubyte),
+        ("Request", ctypes.c_ubyte),
+        ("Value", wintypes.USHORT),
+        ("Index", wintypes.USHORT),
+        ("Length", wintypes.USHORT),
+    ]
+
+
 class _OVERLAPPED(ctypes.Structure):
     _fields_ = [
         ("Internal", ctypes.c_void_p),
@@ -155,6 +165,8 @@ class _CtypesWinUsbBackend:
         w.WinUsb_ReadPipe.restype = wintypes.BOOL
         w.WinUsb_WritePipe.argtypes = [wintypes.HANDLE, ctypes.c_ubyte, ctypes.c_void_p, wintypes.ULONG, ctypes.POINTER(wintypes.ULONG), ctypes.POINTER(_OVERLAPPED)]
         w.WinUsb_WritePipe.restype = wintypes.BOOL
+        w.WinUsb_ControlTransfer.argtypes = [wintypes.HANDLE, _WINUSB_SETUP_PACKET, ctypes.c_void_p, wintypes.ULONG, ctypes.POINTER(wintypes.ULONG), ctypes.POINTER(_OVERLAPPED)]
+        w.WinUsb_ControlTransfer.restype = wintypes.BOOL
         w.WinUsb_AbortPipe.argtypes = [wintypes.HANDLE, ctypes.c_ubyte]
         w.WinUsb_AbortPipe.restype = wintypes.BOOL
 
@@ -184,9 +196,15 @@ class _CtypesWinUsbBackend:
                     in_pipe = pipe.PipeId
                 else:
                     out_pipe = pipe.PipeId
-            if in_pipe is None or out_pipe is None:
-                raise OSError("ScreenBridge interface has no bulk IN/OUT pair")
-            return {"file": handle, "interface": interface, "in_pipe": in_pipe, "out_pipe": out_pipe, "closed": False, "lock": threading.Lock()}
+            session = {
+                "file": handle,
+                "interface": interface,
+                "in_pipe": in_pipe,
+                "out_pipe": out_pipe,
+                "closed": False,
+                "lock": threading.Lock(),
+            }
+            return session, in_pipe, out_pipe
         except Exception:
             if interface:
                 w.WinUsb_Free(interface)
@@ -237,14 +255,64 @@ class _CtypesWinUsbBackend:
     def write(self, session, pipe_id, data, timeout_ms):
         return self._transfer(session, pipe_id, bytes(data), timeout_ms, True)
 
+    def control(self, session, request_type, request, value, index, data, timeout_ms):
+        with session["lock"]:
+            if session["closed"]:
+                raise TransportClosed("transport is closed")
+        is_read = isinstance(data, int)
+        if is_read:
+            length = data
+            buffer = ctypes.create_string_buffer(length)
+        else:
+            payload = bytes(data)
+            length = len(payload)
+            buffer = ctypes.create_string_buffer(payload, length)
+        setup = _WINUSB_SETUP_PACKET(
+            request_type, request, value, index, length
+        )
+        transferred = wintypes.ULONG(0)
+        event = self._kernel32.CreateEventW(None, True, False, None)
+        if not event:
+            raise self._last_error("CreateEventW")
+        overlapped = _OVERLAPPED(hEvent=event)
+        try:
+            pointer = ctypes.cast(buffer, ctypes.c_void_p)
+            ok = self._winusb.WinUsb_ControlTransfer(
+                session["interface"], setup, pointer, length,
+                ctypes.byref(transferred), ctypes.byref(overlapped)
+            )
+            if not ok:
+                error = ctypes.get_last_error()
+                if error != ERROR_IO_PENDING:
+                    raise OSError(error, "WinUsb_ControlTransfer")
+            wait_status = self._kernel32.WaitForSingleObject(event, timeout_ms)
+            if wait_status == WAIT_TIMEOUT:
+                self._kernel32.CancelIoEx(session["file"], ctypes.byref(overlapped))
+                self._kernel32.WaitForSingleObject(event, 1000)
+                raise TimeoutError("WinUSB control transfer timed out")
+            if wait_status == WAIT_FAILED:
+                raise self._last_error("WaitForSingleObject")
+            if not self._kernel32.GetOverlappedResult(session["file"], ctypes.byref(overlapped), ctypes.byref(transferred), False):
+                error = ctypes.get_last_error()
+                if error == ERROR_OPERATION_ABORTED:
+                    raise TimeoutError("WinUSB control transfer cancelled")
+                raise OSError(error, "GetOverlappedResult")
+            if is_read:
+                return bytes(buffer.raw[:transferred.value])
+            return int(transferred.value)
+        finally:
+            self._kernel32.CloseHandle(event)
+
     def close(self, session):
         with session["lock"]:
             if session["closed"]:
                 return
             session["closed"] = True
         self._kernel32.CancelIoEx(session["file"], None)
-        self._winusb.WinUsb_AbortPipe(session["interface"], session["in_pipe"])
-        self._winusb.WinUsb_AbortPipe(session["interface"], session["out_pipe"])
+        if session["in_pipe"] is not None:
+            self._winusb.WinUsb_AbortPipe(session["interface"], session["in_pipe"])
+        if session["out_pipe"] is not None:
+            self._winusb.WinUsb_AbortPipe(session["interface"], session["out_pipe"])
         self._winusb.WinUsb_Free(session["interface"])
         self._kernel32.CloseHandle(session["file"])
 
@@ -284,6 +352,8 @@ class WinUsbTransport:
         if not isinstance(timeout_ms, int) or isinstance(timeout_ms, bool) or timeout_ms < 0:
             raise ValueError("timeout_ms must be a non-negative integer")
         self._ensure_open()
+        if self._in_pipe is None:
+            raise RuntimeError("WinUSB interface has no bulk IN pipe")
         return self._backend.read(self._session, self._in_pipe, size, timeout_ms)
 
     def write(self, data: bytes, timeout_ms: int) -> int:
@@ -292,7 +362,27 @@ class WinUsbTransport:
         if not isinstance(timeout_ms, int) or isinstance(timeout_ms, bool) or timeout_ms < 0:
             raise ValueError("timeout_ms must be a non-negative integer")
         self._ensure_open()
+        if self._out_pipe is None:
+            raise RuntimeError("WinUSB interface has no bulk OUT pipe")
         return self._backend.write(self._session, self._out_pipe, bytes(data), timeout_ms)
+
+    def control_transfer(self, request_type: int, request: int, value: int,
+                         index: int, data, timeout_ms: int):
+        for field, item in (("request_type", request_type), ("request", request),
+                            ("value", value), ("index", index)):
+            if not isinstance(item, int) or isinstance(item, bool) or item < 0:
+                raise ValueError(f"{field} must be a non-negative integer")
+        if not isinstance(timeout_ms, int) or isinstance(timeout_ms, bool) or timeout_ms < 0:
+            raise ValueError("timeout_ms must be a non-negative integer")
+        if isinstance(data, int):
+            if data <= 0:
+                raise ValueError("read length must be positive")
+        elif not isinstance(data, (bytes, bytearray, memoryview)):
+            raise TypeError("control data must be a length or bytes-like")
+        self._ensure_open()
+        return self._backend.control(
+            self._session, request_type, request, value, index, data, timeout_ms
+        )
 
     def close(self) -> None:
         with self._lock:
