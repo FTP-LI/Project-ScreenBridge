@@ -20,13 +20,13 @@ PnpLockdown = 1
 %DeviceName% = ScreenBridge_Install, ScreenBridgeIdd
 
 [SourceDisksFiles]
-ScreenBridgeIdd.dll = 1
+ScreenBridgeIdd.dll = 1,UMDF
 
 [SourceDisksNames]
 1 = %DiskName%
 
 [DestinationDirs]
-UMDriverCopy = 12,UMDF
+UMDriverCopy = 13,UMDF
 
 [ScreenBridge_Install.NT]
 Include    = WUDFRD.inf
@@ -56,7 +56,7 @@ UmdfKernelModeClientPolicy  = AllowKernelModeClients
 Include            = WUDFRD.inf
 Needs              = WUDFRD.NT
 UmdfLibraryVersion = 2.25.0
-ServiceBinary      = %12%\UMDF\ScreenBridgeIdd.dll
+ServiceBinary      = %13%\UMDF\ScreenBridgeIdd.dll
 UmdfExtensions     = IddCx0102
 
 [UMDriverCopy]

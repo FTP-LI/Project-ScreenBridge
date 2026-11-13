@@ -1,0 +1,37 @@
+{
+  "observed_at_utc": "2026-11-13T11:22:10.5636065Z",
+  "package": {
+    "published_name": "oem142.inf",
+    "driver_version": "1.0.2.0",
+    "infverif_w": 0,
+    "infverif_h": 0,
+    "inf2cat": 0,
+    "catalog_signature": "ScreenBridge Development (local self-signed)"
+  },
+  "host": {
+    "requires_admin": true,
+    "started": true,
+    "stopped_by_stop_file": true,
+    "display_after_stop": "Disconnected"
+  },
+  "standard_user_monitor": {
+    "duration_ms": 15000,
+    "exit_code": 0,
+    "frames": 3,
+    "first_sequence": 224,
+    "last_sequence": 244,
+    "width": 1920,
+    "height": 1080,
+    "bytes": 8294400
+  },
+  "topology": {
+    "virtual_display": "DISPLAY23",
+    "physical_displays_untouched": true
+  },
+  "conclusion": "g3_standard_user_continuous_frame_bridge_passed",
+  "limitations": [
+    "local self-signed package",
+    "one host/session and one Windows 11 machine",
+    "encoder, USB video transport and tablet decoder not connected"
+  ]
+}
