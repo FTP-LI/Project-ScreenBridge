@@ -1,0 +1,43 @@
+;
+; ScreenBridge normal-mode bootstrap WinUSB package (development candidate).
+;
+; The reference MatePad reports USB\VID_12D1&PID_107E after USB debugging is
+; disabled. This package is intentionally separate from ScreenBridgeUsb.inf:
+; it must not be installed automatically and it must not match the HDC or AOA
+; identities. Binding a WinUSB function to a composite parent can replace an
+; existing Huawei filter, so installation requires an explicit, reversible
+; development decision and an administrator rollback plan.
+;
+
+[Version]
+Signature   = "$Windows NT$"
+Class       = USBDevice
+ClassGuid   = {88BAE032-5A81-49f0-BC3D-A4FF138216D6}
+Provider    = %ManufacturerName%
+CatalogFile = ScreenBridgeBootstrap.cat
+DriverVer   = 11/13/2026,0.1.0.0
+PnpLockdown = 1
+
+[Manufacturer]
+%ManufacturerName% = Standard,NTamd64
+
+[Standard.NTamd64]
+%DeviceName% = USB_Install, USB\VID_12D1&PID_107E
+
+[USB_Install]
+Include = winusb.inf
+Needs   = WINUSB.NT
+
+[USB_Install.Services]
+Include = winusb.inf
+Needs   = WINUSB.NT.Services
+
+[USB_Install.HW]
+AddReg = Dev_AddReg
+
+[Dev_AddReg]
+HKR,,DeviceInterfaceGUIDs,0x00010000,{331c44be-387b-4621-84a7-f55422e41cfc}
+
+[Strings]
+ManufacturerName = "ScreenBridge"
+DeviceName       = "ScreenBridge Normal USB Bootstrap (development)"

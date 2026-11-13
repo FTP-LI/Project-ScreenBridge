@@ -82,7 +82,7 @@ def create_aoa_handshake(libusb_path: str | None = None) -> Callable[[object], i
     """Build the development AOA callback used before the native C++ port."""
     from aoa_handshake import choose_one, start_accessory
 
-    def handshake(_device):
+    def handshake(target):
         import usb.backend.libusb1
         import usb.core
 
@@ -91,11 +91,13 @@ def create_aoa_handshake(libusb_path: str | None = None) -> Callable[[object], i
         )
         if backend is None:
             raise RuntimeError("libusb backend unavailable")
+        vendor_id = getattr(target, "vendor_id", 0x12D1)
+        product_id = getattr(target, "product_id", 0x5000)
         candidates = usb.core.find(
             find_all=True,
             backend=backend,
-            idVendor=0x12D1,
-            idProduct=0x5000,
+            idVendor=vendor_id,
+            idProduct=product_id,
         )
         device = choose_one(candidates)
         return start_accessory(device, 5000)

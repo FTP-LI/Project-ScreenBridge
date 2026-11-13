@@ -1,0 +1,20 @@
+{
+  "observed_at_utc": "2026-11-13T10:07:42.2720897Z",
+  "device": {
+    "vendor_id": "12d1",
+    "product_id": "107e",
+    "status": "Problem",
+    "problem_code": 39,
+    "problem_status": "0xC000007B",
+    "driver_inf": "oem46.inf",
+    "description": "USB Composite Device"
+  },
+  "hdc_process_running": false,
+  "native_probe": {
+    "list": "no matching AOA device",
+    "probe": "expected exactly one matching USB device, found 0",
+    "start": "expected exactly one matching USB device, found 0",
+    "libusb": "C:\\Program Files\\Huawei\\DevEco Studio\\sdk\\default\\openharmony\\toolchains\\libusb_shared.dll"
+  },
+  "conclusion": "failed_driver_access"
+}`n

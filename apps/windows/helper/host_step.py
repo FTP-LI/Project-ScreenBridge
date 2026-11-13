@@ -4,12 +4,13 @@ This does not open a device. Accessory mode must not trigger another handshake.
 """
 
 DEBUG_ID = (0x12D1, 0x5000)
+BOOTSTRAP_IDS = {(0x12D1, 0x107E)}
 ACCESSORY_IDS = {(0x18D1, 0x2D00), (0x18D1, 0x2D01)}
 
 
 def classify_present(identities):
     identities = list(identities)
-    debug = [item for item in identities if item == DEBUG_ID]
+    debug = [item for item in identities if item == DEBUG_ID or item in BOOTSTRAP_IDS]
     accessory = [item for item in identities if item in ACCESSORY_IDS]
     if len(accessory) == 1 and not debug:
         return "wait_tablet"

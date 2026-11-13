@@ -2,7 +2,8 @@
 
 Only opaque ``stable_key`` values (``sha256(instance_id)[:16]``) belong here.
 Instance IDs, serial numbers, VID/PID pairs and computer names are never
-written to disk; the store lives under the git-ignored ``work/`` directory.
+written to disk; the installed helper stores the file under the user's local
+application data directory.
 
 This module does not decide whether a device is paired. ``SessionMachine``
 does that during ``attach`` using ``device.key``; ``control()`` does not
@@ -17,8 +18,19 @@ import threading
 from pathlib import Path
 
 VERSION = 1
-DEFAULT_PATH = Path(__file__).resolve().parents[3] / "work" / "pairing.json"
 _MAX_KEY_LENGTH = 64
+
+
+def default_path() -> Path:
+    """Return the per-user path used by the installed helper.
+
+    The repository-local fallback keeps the development runtime usable on
+    non-Windows hosts and in source checkouts without a profile directory.
+    """
+    local_app_data = os.environ.get("LOCALAPPDATA")
+    if local_app_data:
+        return Path(local_app_data) / "ScreenBridge" / "pairing.json"
+    return Path(__file__).resolve().parents[3] / "work" / "pairing.json"
 
 
 class PairingError(ValueError):
@@ -37,7 +49,7 @@ class PairingStore:
     """Thread-safe, atomically persisted set of paired stable keys."""
 
     def __init__(self, path: Path | str | None = None) -> None:
-        self._path = Path(path) if path is not None else DEFAULT_PATH
+        self._path = Path(path) if path is not None else default_path()
         self._lock = threading.Lock()
         self._keys: set[str] = set()
         self._load()

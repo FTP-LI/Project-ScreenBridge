@@ -14,6 +14,7 @@ from aoa_handshake import (
 )
 
 DEBUG = (0x12D1, 0x5000)
+NORMAL = (0x12D1, 0x107E)
 ACCESSORY = (0x18D1, 0x2D00)
 
 
@@ -62,6 +63,7 @@ class AoaHandshakeTests(unittest.TestCase):
 
     def test_should_handshake_only_for_debug_identity(self):
         self.assertTrue(should_handshake([DEBUG], "waiting_reenumeration", ["handshake"]))
+        self.assertTrue(should_handshake([NORMAL], "waiting_reenumeration", ["handshake"]))
         self.assertTrue(should_handshake([DEBUG], "discovered", []))
         self.assertFalse(should_handshake([], "disconnected", ["handshake"]))
         self.assertFalse(should_handshake([ACCESSORY], "waiting_tablet", ["handshake"]))

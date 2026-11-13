@@ -5,6 +5,10 @@ It does not open USB devices, install drivers, or create a Windows monitor.
 """
 
 DEBUG_IDS = {(0x12D1, 0x5000)}
+# Normal-mode identity observed on the reference MatePad when USB debugging
+# is disabled. Keep this list explicit: a generic Huawei match could capture
+# MTP or other device functions.
+BOOTSTRAP_IDS = {(0x12D1, 0x107E)}
 ACCESSORY_IDS = {(0x18D1, 0x2D00), (0x18D1, 0x2D01)}
 SUPPORTED_CONTROL_VERSION = 1
 STOP_REASONS = ("unplug", "stop", "background", "read_hang")
@@ -30,7 +34,7 @@ class SessionMachine:
 
     def attach(self, device):
         identity = (device.vendor_id, device.product_id)
-        if identity not in DEBUG_IDS and identity not in ACCESSORY_IDS:
+        if identity not in DEBUG_IDS and identity not in BOOTSTRAP_IDS and identity not in ACCESSORY_IDS:
             self.actions.append("ignore")
             return
         if self.phase == "waiting_reenumeration" and identity in ACCESSORY_IDS:
@@ -71,6 +75,16 @@ class SessionMachine:
             return
         if identity in ACCESSORY_IDS and device.key not in self.paired_keys:
             self.actions.append("reject_unpaired")
+            return
+        if identity in BOOTSTRAP_IDS:
+            self.device_key = device.key
+            if device.problem_code != 0 or not device.interface_present:
+                self._enter("needs_setup")
+                self.actions.append("needs_setup")
+                return
+            self._enter("discovered")
+            self._enter("waiting_reenumeration")
+            self.actions.append("handshake")
             return
         if identity in DEBUG_IDS:
             self.device_key = device.key

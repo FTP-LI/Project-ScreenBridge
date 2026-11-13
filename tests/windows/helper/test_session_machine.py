@@ -12,6 +12,10 @@ def debug_device(key="tablet-a"):
     return DeviceSeen(key, 0x12D1, 0x5000, 0, True)
 
 
+def normal_mode_device(key="tablet-a", problem_code=0, interface_present=True):
+    return DeviceSeen(key, 0x12D1, 0x107E, problem_code, interface_present)
+
+
 def accessory(key="tablet-a", problem_code=0, interface_present=True):
     return DeviceSeen(key, 0x18D1, 0x2D00, problem_code, interface_present)
 
@@ -37,6 +41,19 @@ class SessionMachineTests(unittest.TestCase):
         self.assertEqual(machine.phase, "waiting_tablet")
         self.assertFalse(machine.display_connected)
 
+    def test_observed_normal_mode_identity_starts_the_same_handshake(self):
+        machine = SessionMachine(("tablet-a",))
+        machine.attach(normal_mode_device())
+        self.assertEqual(machine.phase, "waiting_reenumeration")
+        self.assertEqual(machine.actions.count("handshake"), 1)
+
+    def test_broken_normal_mode_identity_requests_setup_without_handshake(self):
+        machine = SessionMachine(("tablet-a",))
+        machine.attach(normal_mode_device(problem_code=39, interface_present=False))
+        self.assertEqual(machine.phase, "needs_setup")
+        self.assertIn("needs_setup", machine.actions)
+        self.assertNotIn("handshake", machine.actions)
+
     def test_reenumeration_accepts_new_pnp_key_for_the_same_accessory_identity(self):
         machine = SessionMachine(("accessory-key",))
         machine.attach(debug_device("debug-key"))
@@ -48,6 +65,7 @@ class SessionMachineTests(unittest.TestCase):
     def test_present_accessory_does_not_request_handshake(self):
         self.assertEqual(classify_present([(0x18D1, 0x2D00)]), "wait_tablet")
         self.assertEqual(classify_present([(0x12D1, 0x5000)]), "handshake")
+        self.assertEqual(classify_present([(0x12D1, 0x107E)]), "handshake")
         self.assertEqual(classify_present([]), "idle")
         self.assertEqual(classify_present([(0x12D1, 0x5000), (0x18D1, 0x2D00)]), "ambiguous")
 

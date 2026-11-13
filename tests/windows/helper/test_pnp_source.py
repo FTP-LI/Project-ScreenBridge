@@ -46,6 +46,12 @@ class PnpSourceTests(unittest.TestCase):
         })
         self.assertIsNone(device_from_instance(r"USB\VID_1234&PID_5678\serial-a", 0, True))
 
+    def test_record_accepts_observed_normal_mode_identity(self):
+        device = device_from_instance(r"USB\VID_12D1&PID_107E\device", 39, False)
+        self.assertIsNotNone(device)
+        self.assertEqual((device.vendor_id, device.product_id), (0x12D1, 0x107E))
+        self.assertEqual(device.problem_code, 39)
+
     def test_only_started_and_removed_instances_are_delivered(self):
         self.assertEqual(_kind_for_action(8), "arrive")
         self.assertEqual(_kind_for_action(9), "remove")

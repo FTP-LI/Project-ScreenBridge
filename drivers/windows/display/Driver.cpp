@@ -16,9 +16,11 @@ Environment:
 --*/
 
 #include "Driver.h"
+#include "../../../apps/windows/streaming/frame_bridge.h"
 #include <evntrace.h>
 #include "Driver.tmh"
 #include <stdio.h>
+#include <limits>
 
 static void LogStep(const char* step, NTSTATUS status)
 {
@@ -54,14 +56,12 @@ struct BootLog
 
 static BootLog g_bootLog;
 
-static void RecordFrameOnce(ID3D11Device* device, ID3D11DeviceContext* context, IDXGIResource* resource)
+static void PublishFrame(screenbridge::FrameBridge* bridge,
+                         ID3D11Device* device,
+                         ID3D11DeviceContext* context,
+                         IDXGIResource* resource,
+                         std::vector<BYTE>& frame)
 {
-    static LONG recorded = 0;
-    if (InterlockedCompareExchange(&recorded, 1, 0) != 0)
-    {
-        return;
-    }
-
     Microsoft::WRL::ComPtr<ID3D11Texture2D> source;
     if (FAILED(resource->QueryInterface(IID_PPV_ARGS(&source))))
     {
@@ -98,45 +98,41 @@ static void RecordFrameOnce(ID3D11Device* device, ID3D11DeviceContext* context, 
         return;
     }
 
-    const UINT sampleRows = desc.Height < 32u ? desc.Height : 32u;
-    const UINT sampleBytes = mapped.RowPitch < 256u ? mapped.RowPitch : 256u;
-    ULONG nonzero = 0;
-    for (UINT row = 0; row < sampleRows; row++)
+    const UINT64 totalBytes = static_cast<UINT64>(mapped.RowPitch) * desc.Height;
+    if (totalBytes == 0 || totalBytes > std::numeric_limits<UINT32>::max())
     {
-        const BYTE* line = static_cast<const BYTE*>(mapped.pData) + row * mapped.RowPitch;
-        for (UINT column = 0; column < sampleBytes; column++)
-        {
-            if (line[column] != 0)
-            {
-                nonzero++;
-            }
-        }
+        context->Unmap(staging.Get(), 0);
+        LogStep("frame-size", E_INVALIDARG);
+        return;
+    }
+
+    if (frame.size() < totalBytes)
+    {
+        context->Unmap(staging.Get(), 0);
+        LogStep("frame-buffer", E_OUTOFMEMORY);
+        return;
+    }
+    const BYTE* sourceBytes = static_cast<const BYTE*>(mapped.pData);
+    for (UINT row = 0; row < desc.Height; ++row)
+    {
+        memcpy(frame.data() + static_cast<size_t>(row) * mapped.RowPitch,
+               sourceBytes + static_cast<size_t>(row) * mapped.RowPitch,
+               mapped.RowPitch);
     }
     context->Unmap(staging.Get(), 0);
 
-    HANDLE file = CreateFileA("C:\\Windows\\Temp\\sb-frame.txt", GENERIC_WRITE, FILE_SHARE_READ, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
-    if (file == INVALID_HANDLE_VALUE)
+    if (bridge == nullptr)
     {
-        LogStep("frame-file", GetLastError());
+        LogStep("frame-bridge", E_HANDLE);
         return;
     }
-    char buf[160];
-    int length = 0;
-    const char* prefix = "width=";
-    while (*prefix) buf[length++] = *prefix++;
-    for (int i = 0; i < 8; ++i) buf[length++] = "0123456789abcdef"[(desc.Width >> ((7 - i) * 4)) & 0xF];
-    const char* mid = " height=";
-    while (*mid) buf[length++] = *mid++;
-    for (int i = 0; i < 8; ++i) buf[length++] = "0123456789abcdef"[(desc.Height >> ((7 - i) * 4)) & 0xF];
-    const char* tail = " nonzero=";
-    while (*tail) buf[length++] = *tail++;
-    for (int i = 0; i < 8; ++i) buf[length++] = "0123456789abcdef"[(nonzero >> ((7 - i) * 4)) & 0xF];
-    buf[length++] = '\r';
-    buf[length++] = '\n';
-    DWORD written = 0;
-    WriteFile(file, buf, length, &written, nullptr);
-    CloseHandle(file);
-    LogStep("frame-ok", nonzero);
+    if (!bridge->Publish(desc.Width, desc.Height, mapped.RowPitch,
+                         frame.data(), static_cast<UINT32>(totalBytes)))
+    {
+        LogStep("frame-publish", E_FAIL);
+        return;
+    }
+    LogStep("frame-publish", static_cast<NTSTATUS>(desc.Width));
 }
 
 using namespace std;
@@ -530,7 +526,20 @@ void SwapChainProcessor::RunCore()
         {
             // We have new frame to process, the surface has a reference on it that the driver has to release
             AcquiredBuffer.Attach(Buffer.MetaData.pSurface);
-            RecordFrameOnce(m_Device->Device.Get(), m_Device->DeviceContext.Get(), AcquiredBuffer.Get());
+            if (!m_FrameBridge)
+            {
+                m_FrameBridge = screenbridge::FrameBridge::Create(L"ScreenBridge.Display", 1920u * 1080u * 4u);
+                if (!m_FrameBridge)
+                {
+                    LogStep("frame-bridge-create", E_FAIL);
+                }
+            }
+            if (m_FrameBuffer.empty())
+            {
+                m_FrameBuffer.resize(1920u * 1080u * 4u);
+            }
+            PublishFrame(m_FrameBridge.get(), m_Device->Device.Get(), m_Device->DeviceContext.Get(),
+                         AcquiredBuffer.Get(), m_FrameBuffer);
 
             // ==============================
             // TODO: Process the frame here

@@ -1,8 +1,10 @@
 import json
+import os
 import sys
 import tempfile
 import threading
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "apps" / "windows" / "helper"))
@@ -20,6 +22,12 @@ class PairingStoreTests(unittest.TestCase):
         store = PairingStore(self.path)
         self.assertEqual(store.load(), set())
         self.assertFalse(store.contains("a" * 16))
+
+    def test_default_path_uses_user_local_app_data(self):
+        with tempfile.TemporaryDirectory() as local_app_data:
+            with patch.dict(os.environ, {"LOCALAPPDATA": local_app_data}):
+                store = PairingStore()
+            self.assertEqual(store.path, Path(local_app_data) / "ScreenBridge" / "pairing.json")
 
     def test_add_contains_forget_and_persist(self):
         store = PairingStore(self.path)

@@ -17,6 +17,11 @@
 
 #include "Trace.h"
 
+namespace screenbridge
+{
+    class FrameBridge;
+}
+
 namespace Microsoft
 {
     namespace WRL
@@ -86,6 +91,8 @@ namespace Microsoft
             HANDLE m_hAvailableBufferEvent;
             Microsoft::WRL::Wrappers::Thread m_hThread;
             Microsoft::WRL::Wrappers::Event m_hTerminateEvent;
+            std::unique_ptr<screenbridge::FrameBridge> m_FrameBridge;
+            std::vector<BYTE> m_FrameBuffer;
         };
 
         /// <summary>

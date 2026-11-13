@@ -4,7 +4,7 @@
 
 2026-11-04 上午的 U1 只读诊断里，平板当时枚举为调试身份 `12d1:5000`，配件身份没有出现，签名工具也未就绪；以下 U1 段落记录的是当时的状态，不代表本机当前条件。同一天晚些时候工具补齐，安装了限定配件身份的 WinUSB 包，握手后设备变为 `18d1:2d00` 且问题码 0。随后 100 帧、140 帧边界、重开后 140 帧和 60 秒连续回传都已在这台配件上校验通过。配件态访问、接口 GUID 与标准用户打开接口不再列为未验证项。
 
-换端口、重启保留、传输中拔线和平板停止后的恢复、无 HDC 的正常模式起连仍未做，Windows 扩展桌面也未通过。细节见下文与 [2026-11-06 只读复查](#2026-11-06-只读复查)。
+换端口、重启保留、传输中拔线和平板停止后的恢复仍未做，Windows 扩展桌面也未通过。2026-11-13 的 U4 已实际执行：关闭 USB 调试后设备枚举为 `12d1:107e`，但 Windows 绑定的 Huawei 复合过滤驱动报问题码 39，原生工具无法打开设备，因此正常模式起连判定为 `failed`。细节见下文与 [2026-11-06 只读复查](#2026-11-06-只读复查)。
 
 调试身份问题码 0，服务为 WINUSB，驱动为 Microsoft `winusb.inf`，设备接口存在，兼容 ID 含 `USB\MS_COMP_WINUSB`。U1 当时 libusb 只列出这一台 `12d1:5000`。这只说明当时用户会话能枚举调试身份，不是配件回传，也不是 echo 通过。
 
@@ -55,10 +55,17 @@ $env:SCREENBRIDGE_LIBUSB = 'C:\Program Files\Huawei\DevEco Studio\sdk\default\op
 
 `can_attempt_access=true` 只表示恰好一台当前设备问题码为 0、已有服务且登记了设备接口。调试身份的这个值不能用来打开配件通道。公开 JSON 不含实例路径、序列号或计算机名。
 
+## U4：无 HDC 的正常模式起连（2026-11-13）
+
+平板已关闭 USB 调试并保持数据线连接，电脑侧没有保留可用的 HDC 进程；`pnputil` 看到设备 `USB\VID_12D1&PID_107E`。该设备不是调试身份，也不是 AOA 配件身份，但复合设备本身处于问题状态：问题码 `39 (CM_PROB_DRIVER_FAILED_LOAD)`，状态 `0xC000007B`，绑定 `oem46.inf`（Huawei `BusFilter.INF`）。由于复合过滤驱动没有加载，设备没有产生可供 PyUSB/WinUSB 打开的子接口。
+
+使用 DevEco 内置 `libusb_shared.dll` 的原生探针，显式指定 `12d1:107e`，`probe` 和 `start` 均返回 `expected exactly one matching USB device, found 0`；没有发送 AOA START，也没有修改驱动。脱敏记录见 [U4 结果](results/2026-11-13-u4-normal-12d1-107e.json)，`start` 原始报告见 `work/u4-start-12d1-107e.json`（本地文件）。
+
+本次结论：`accessory_access_passed=passed`、`echo_passed=passed`；`normal_mode_bootstrap_passed=failed`（阻点是当前 Windows 复合过滤驱动，不是 HDC 转发）；`cross_port_retention_passed=not_tested`。下一步需要在本机明确授权后，为 `12d1:107e` 设计并单独验证可回滚的 WinUSB/复合设备驱动绑定，不能直接删除 Huawei 驱动包或把本次失败写成产品兼容结论。
+
 ## 仍未验证
 
 - 传输中拔线、平板停止后的恢复与下一轮重连。
-- 关闭 HDC/调试后的正常模式起连（U4）。
 - 换端口、重启后的绑定保留。
 - 30 分钟持续传输、两类端口各 20 次插拔、PD 与线速。
 - Windows 扩展桌面、驱动图像交接与完整画面链路。
@@ -127,4 +134,4 @@ $env:SCREENBRIDGE_LIBUSB = 'C:\Program Files\Huawei\DevEco Studio\sdk\default\op
 
 仓库整理：`g1-usb-access` 的最新工作（含 11-04 之后的源码与证据）已快进合入 `main`；误入库的 `*.obj`、`*.dll`、`*.exe`、TMH、MAP 等构建产物已从版本库移除并加入 `.gitignore`，本地文件保留。此前 README/HANDOFF 中“从 main 继续”的说明在合并前会丢工作，现已与 `main` 的实际内容一致。
 
-结论：`accessory_access_passed` 与 `echo_passed` 已有真机证据；`normal_mode_bootstrap_passed`、`cross_port_retention_passed` 仍为 `not_tested`。开始 U3 剩余项和 U4 前，需要用户重新接线、在平板上打开屏桥，并按步骤关闭 USB 调试。
+结论：`accessory_access_passed` 与 `echo_passed` 已有真机证据；`normal_mode_bootstrap_passed=failed` 的 U4 记录见上文；`cross_port_retention_passed` 仍为 `not_tested`。U4 后续要先解决 `12d1:107e` 的驱动访问并保留可回滚路径，再重复无 HDC 的 AOA 起连。

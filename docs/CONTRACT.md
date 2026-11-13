@@ -23,12 +23,13 @@
 | --- | --- | --- |
 | 设备接口 GUID | `{331c44be-387b-4621-84a7-f55422e41cfc}` | `apps/windows/helper/pnp_source.py`、`drivers/windows/usb/ScreenBridgeUsb.inf` |
 | DEBUG_IDS | `{(0x12D1, 0x5000)}` | `apps/windows/helper/session_machine.py`、`host_step.py` |
+| BOOTSTRAP_IDS | `{(0x12D1, 0x107E)}`（当前参考平板关闭 USB 调试后的实测身份） | `session_machine.py`、`pnp_source.py`、`host_step.py` |
 | ACCESSORY_IDS | `{(0x18D1, 0x2D00), (0x18D1, 0x2D01)}` | `session_machine.py`、`accessory_transport.py` |
 | AOA 身份串 | `("ScreenBridge","USBProbe","ScreenBridge M0 echo","0.1","https://github.com/FTP-LI/Project-ScreenBridge","m0-prototype")`；GET_PROTOCOL 请求 51、身份请求 52、START 请求 53；协议版本须为 1 或 2 | `prototypes/usb/host/usb_probe.py` |
 | stable_key | `sha256(instance_id)[:16]`，公开记录只含哈希；实例 ID、序列号、计算机名留在进程/本机 | `pnp_source.py` |
 | STOP_REASONS | `("unplug","stop","background","read_hang")` | `session_machine.py` |
 
-`18d1:2d00/2d01` 是共享 AOA 身份，**不能作为配对唯一身份**；INF 只精确匹配这两个 VID/PID，不匹配 `12d1:5000`、通配类 FF 或全部华为设备。
+`18d1:2d00/2d01` 是共享 AOA 身份，**不能作为配对唯一身份**；当前正常模式只精确纳入实测的 `12d1:107e`，INF/配置不能通配全部华为设备或类 `FF`。现有配件 INF 仍只匹配 `18d1:2d00/2d01`，不匹配 `12d1:5000`。
 
 ## 三、行为契约（语义级）
 

@@ -1,6 +1,6 @@
 # G2 连接控制与后台实施计划（S3）
 
-> 2026-11-13 状态：软件骨架已实现并通过 51 项 helper 测试；真实 WinUSB 打开、平板 SBC1、自动 AOA 真机重枚举和拔线恢复仍待完成。见 `docs/validation/G2_SOFTWARE_2026-11-13.md`。
+> 2026-11-13 状态：软件骨架已实现并通过 55 项 helper 测试；U4 已观察到正常身份 `12d1:107e`，但其 Huawei 复合过滤驱动报问题码 39，真实 WinUSB 打开、平板 SBC1、自动 AOA 真机重枚举和拔线恢复仍待完成。见 `docs/validation/G2_SOFTWARE_2026-11-13.md`。
 
 > 状态：待执行。目标：接通「两套世界」——已存在的注入式状态机 / 真实 ctypes PnP / 真实 PyUSB 端点，串成从设备到达 → 自动 AOA 握手 → 从 USB 读 SBC1 → 平板就绪 → 单会话的链路。契约见 `docs/CONTRACT.md`，先用 Python 取证再迁 C++。
 

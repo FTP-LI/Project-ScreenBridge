@@ -9,10 +9,10 @@ import re
 import threading
 from ctypes import wintypes
 
-from session_machine import ACCESSORY_IDS, DEBUG_IDS, DeviceSeen
+from session_machine import ACCESSORY_IDS, BOOTSTRAP_IDS, DEBUG_IDS, DeviceSeen
 
 _USB_IDENTITY = re.compile(r"VID_([0-9A-Fa-f]{4})&PID_([0-9A-Fa-f]{4})")
-INTERESTED_IDS = DEBUG_IDS | ACCESSORY_IDS
+INTERESTED_IDS = DEBUG_IDS | BOOTSTRAP_IDS | ACCESSORY_IDS
 INTERFACE_GUID = (0x331C44BE, 0x387B, 0x4621, (0x84, 0xA7, 0xF5, 0x54, 0x22, 0xE4, 0x1C, 0xFC))
 _PRESENT_USB = 0x00000001 | 0x00000100
 _DN_HAS_PROBLEM = 0x00000400

@@ -32,7 +32,7 @@
 
 ## 当前基线
 
-已存在 `prototypes/usb/`、`drivers/windows/` 的 WinUSB 与 IDD 源码、`apps/windows/` 的连接状态机、`shared/protocol/` 的视频分包，以及签名平板应用。2026-11-04 已在配件身份 `18d1:2d00` 上取得真机 echo 证据：100 帧、140 帧边界、重开后 140 帧、60 秒 11782 帧。2026-11-06 本机自动化基线为 Python 23+27+7 项、Node 6 项全部通过；这些是假端点与本地协议测试，不是真机验收。代码 28 与更新向导取消属于 11-02 的历史记录。细节见 [G1_USB_ACCESS.md](validation/G1_USB_ACCESS.md) 和 [G3_IDD_2026-11-04.md](validation/G3_IDD_2026-11-04.md)。
+已存在 `prototypes/usb/`、`drivers/windows/` 的 WinUSB 与 IDD 源码、`apps/windows/` 的连接状态机、`shared/protocol/` 的视频分包，以及签名平板应用。2026-11-04 已在配件身份 `18d1:2d00` 上取得真机 echo 证据：100 帧、140 帧边界、重开后 140 帧、60 秒 11782 帧。2026-11-13 关闭 USB 调试后观察到正常身份 `12d1:107e`，但 Huawei `oem46.inf` 问题码 39 阻止原生打开；软件运行时已将该状态收敛到 `needs_setup`。本机自动化基线为 Python helper 55 项、streaming 7 项、USB 23 项、Node 6 项全部通过；这些是假端点与本地协议测试，不是真机验收。代码 28 与更新向导取消属于 11-02 的历史记录。细节见 [G1_USB_ACCESS.md](validation/G1_USB_ACCESS.md) 和 [G3_IDD_2026-11-04.md](validation/G3_IDD_2026-11-04.md)。
 
 当前开发机不是前期提到的联想电脑；PD、线速和两类参考端口仍未确认。开发机为七彩虹 B850M、Windows 11 10.0.26200；2026-11-04 当天已补齐 MSVC 14.44、WDK/SDK 10.0.26100 与 INF/签名工具，USB 包与 IDD 包都是本机自签，不是可公开发布的签名。2026-11-06 只读复查时没有在线的 `12d1`/`18d1` 设备，`hdc` 未运行，屏桥显示器也未接入；不能把历史记录当成设备仍连接或驱动已验证完成。
 

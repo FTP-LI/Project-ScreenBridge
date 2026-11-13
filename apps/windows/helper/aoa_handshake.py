@@ -16,6 +16,10 @@ from typing import Iterable
 
 AOA_IDS = (0x2D00, 0x2D01)
 DEBUG_IDS = frozenset({(0x12D1, 0x5000)})
+# Explicit normal-mode identities that the helper may bootstrap. This is
+# intentionally narrow; the reference device currently reports 12d1:107e
+# with USB debugging disabled.
+BOOTSTRAP_IDS = frozenset({(0x12D1, 0x107E)})
 ACCESSORY_IDS = frozenset({(0x18D1, product) for product in AOA_IDS})
 SUPPORTED_VERSIONS = (1, 2)
 IDENTITY = (
@@ -81,7 +85,7 @@ def should_handshake(
     if already_attempted:
         return False
     ids = set(identities)
-    if not ids & DEBUG_IDS:
+    if not (ids & DEBUG_IDS or ids & BOOTSTRAP_IDS):
         return False
     if ids & ACCESSORY_IDS:
         return False
