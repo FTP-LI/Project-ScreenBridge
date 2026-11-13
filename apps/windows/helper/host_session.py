@@ -59,12 +59,24 @@ class HostSession:
     def _release(self, reason):
         gate = self.gate
         transport = self.transport
+        thread = self._thread
         if gate is not None:
             gate.stop(reason)
         if transport is not None:
             transport.close()
+        if thread is not None and thread is not threading.current_thread():
+            thread.join(1)
+        if thread is None or not thread.is_alive():
+            self.transport = None
+            self.gate = None
+            self._thread = None
 
     def accept_ready(self, *, kind, version, paired, accept):
+        if kind != "stop" and (self.transport is not None or (
+            self._thread is not None and self._thread.is_alive()
+        )):
+            self.machine.actions.append("reject_transport_busy")
+            return
         self.machine.control(kind=kind, version=version, paired=paired, accept=accept)
         if kind == "stop":
             self._release("stop")
@@ -89,6 +101,12 @@ class HostSession:
 
     def _pump(self, transport, exchange, gate):
         self.verified, self.error_type = run_cancellable(transport, exchange, gate)
+        if self.machine.phase != "disconnected":
+            self.machine.stop("read_hang")
+        if self._thread is threading.current_thread():
+            self.transport = None
+            self.gate = None
+            self._thread = None
 
     def finish(self, timeout):
         thread = self._thread

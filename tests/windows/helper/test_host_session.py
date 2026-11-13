@@ -130,6 +130,30 @@ class HostSessionTests(unittest.TestCase):
         self.assertEqual(machine.phase, "disconnected")
         self.assertFalse(machine.display_connected)
 
+    def test_stop_then_ready_reopens_a_fresh_transport(self):
+        opened = []
+
+        def opener():
+            transport = CloseOnce()
+            opened.append(transport)
+            return transport
+
+        session, machine = self.session(opener)
+        session.handle("arrive", accessory())
+        session.accept_ready(kind="ready", version=1, paired=True, accept=True)
+        session.accept_ready(kind="stop", version=1, paired=True, accept=True)
+        self.assertTrue(session.finish(1))
+        self.assertEqual(machine.phase, "disconnected")
+
+        session.handle("arrive", accessory())
+        session.accept_ready(kind="ready", version=1, paired=True, accept=True)
+        self.assertEqual(len(opened), 2)
+        self.assertIs(session.transport, opened[1])
+        self.assertEqual(opened[0].release_count, 1)
+        session.accept_ready(kind="stop", version=1, paired=True, accept=True)
+        self.assertTrue(session.finish(1))
+        self.assertEqual(opened[1].release_count, 1)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -262,7 +262,7 @@ def subscribe_described(register, describe, callback):
 
     def loop():
         while True:
-            ready.wait(0.05)
+            ready.wait()
             while True:
                 with lock:
                     if not pending:

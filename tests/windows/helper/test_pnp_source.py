@@ -1,10 +1,12 @@
 import sys
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "apps" / "windows" / "helper"))
 
 import threading
+import pnp_source
 
 from pnp_source import (
     _kind_for_action,
@@ -82,6 +84,40 @@ class PnpSourceTests(unittest.TestCase):
         self.assertEqual(kind, "arrive")
         self.assertTrue(device.interface_present)
         self.assertEqual(device.problem_code, 0)
+
+    def test_subscription_worker_blocks_until_an_event(self):
+        real_event = threading.Event
+
+        class ObservedEvent:
+            instances = []
+
+            def __init__(self):
+                self._event = real_event()
+                self.wait_args = []
+                self.__class__.instances.append(self)
+
+            def wait(self, *args):
+                self.wait_args.append(args)
+                return self._event.wait(*args)
+
+            def set(self):
+                self._event.set()
+
+            def is_set(self):
+                return self._event.is_set()
+
+            def clear(self):
+                self._event.clear()
+
+        def register(_callback):
+            return lambda: None
+
+        with patch.object(pnp_source.threading, "Event", ObservedEvent):
+            unsubscribe = subscribe_described(register, lambda _: None, lambda *_: None)
+            unsubscribe()
+
+        ready = ObservedEvent.instances[0]
+        self.assertIn((), ready.wait_args)
 
 
 if __name__ == "__main__":
