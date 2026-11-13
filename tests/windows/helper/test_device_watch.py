@@ -95,6 +95,21 @@ class DeviceWatchTests(unittest.TestCase):
         self.assertEqual(machine.actions.count("cleanup"), 1)
         self.assertFalse(machine.display_connected)
 
+    def test_events_are_forwarded_to_runtime_callback_once(self):
+        device = accessory()
+        bus = Bus([])
+        forwarded = []
+        watch = DeviceWatch(
+            bus.subscribe,
+            bus.enumerate_present,
+            on_event=lambda kind, item: forwarded.append((kind, item)),
+        )
+        watch.start()
+        bus.callback("arrive", device)
+        bus.callback("arrive", device)
+        bus.callback("remove", device)
+        self.assertEqual(forwarded, [("arrive", device), ("remove", device)])
+
 
 if __name__ == "__main__":
     unittest.main()

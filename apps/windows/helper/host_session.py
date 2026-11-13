@@ -71,6 +71,11 @@ class HostSession:
             self.gate = None
             self._thread = None
 
+    def stop(self, reason="background"):
+        """Stop the session and release the current transport, if any."""
+        self.machine.stop(reason)
+        self._release(reason)
+
     def accept_ready(self, *, kind, version, paired, accept):
         if kind != "stop" and (self.transport is not None or (
             self._thread is not None and self._thread.is_alive()

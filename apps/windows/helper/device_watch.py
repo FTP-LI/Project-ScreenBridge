@@ -8,9 +8,10 @@ import threading
 
 
 class DeviceWatch:
-    def __init__(self, subscribe, enumerate_present):
+    def __init__(self, subscribe, enumerate_present, on_event=None):
         self._subscribe = subscribe
         self._enumerate_present = enumerate_present
+        self._on_event = on_event
         self._unsubscribe = None
         self._queue = None
         self._present = set()
@@ -63,6 +64,8 @@ class DeviceWatch:
                 return
             self._present.add(device.key)
             self.events.append(("arrive", device))
+        if self._on_event is not None:
+            self._on_event("arrive", device)
 
     def _remove(self, device):
         with self._lock:
@@ -70,6 +73,8 @@ class DeviceWatch:
                 return
             self._present.remove(device.key)
             self.events.append(("remove", device))
+        if self._on_event is not None:
+            self._on_event("remove", device)
 
 
 def apply_presence(machine, kind, device):
