@@ -61,7 +61,7 @@
 
 ## 六、回归检查清单
 
-- Python：`prototypes/usb/host`（23 项）、`tests/windows/helper`（56 项）、`tests/windows/streaming`（7 项）、`tests/windows/usb`（2 项）。
+- Python：`prototypes/usb/host`（23 项）、`tests/windows/helper`（56 项）、`tests/windows/streaming`（9 项）、`tests/windows/usb`（2 项）。
 - Node：`prototypes/usb/harmony/test-protocol.mjs`（6 项）与正式应用控制协议测试（2 项）。
 - C++：`apps/windows/streaming/frame_slot_test.cpp` 编译运行；后续新增 `tests/windows/display/`。
 - 上述均为**软件测试**，不得替代真机验收；真机证据另按 `docs/validation/` 七类分账记录。
