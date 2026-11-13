@@ -37,6 +37,14 @@ class SessionMachineTests(unittest.TestCase):
         self.assertEqual(machine.phase, "waiting_tablet")
         self.assertFalse(machine.display_connected)
 
+    def test_reenumeration_accepts_new_pnp_key_for_the_same_accessory_identity(self):
+        machine = SessionMachine(("accessory-key",))
+        machine.attach(debug_device("debug-key"))
+        machine.attach(accessory("accessory-key"))
+        self.assertEqual(machine.actions.count("handshake"), 1)
+        self.assertEqual(machine.phase, "waiting_tablet")
+        self.assertEqual(machine.device_key, "accessory-key")
+
     def test_present_accessory_does_not_request_handshake(self):
         self.assertEqual(classify_present([(0x18D1, 0x2D00)]), "wait_tablet")
         self.assertEqual(classify_present([(0x12D1, 0x5000)]), "handshake")

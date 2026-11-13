@@ -33,6 +33,24 @@ class SessionMachine:
         if identity not in DEBUG_IDS and identity not in ACCESSORY_IDS:
             self.actions.append("ignore")
             return
+        if self.phase == "waiting_reenumeration" and identity in ACCESSORY_IDS:
+            # AOA changes VID/PID and Windows may expose a new instance ID.
+            # During the single expected re-enumeration window, the accessory
+            # identity is the transition event; later arrivals still use the
+            # normal single-session/paired-device checks below.
+            previous_key = self.device_key
+            self.device_key = device.key
+            if device.problem_code != 0 or not device.interface_present:
+                self._enter("needs_setup")
+                self.actions.append("needs_setup")
+                return
+            if device.key not in self.paired_keys:
+                if previous_key is not None and previous_key != device.key:
+                    self.actions.append("reject_ambiguous")
+                self.actions.append("reject_unpaired")
+                return
+            self._enter("waiting_tablet")
+            return
         session_active = self.phase not in ("disconnected", "needs_setup")
         if self.device_key is not None and device.key != self.device_key and session_active:
             self.actions.append("reject_ambiguous")

@@ -2,6 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 import sys
+import subprocess
 
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / "apps" / "windows" / "helper"))
@@ -85,6 +86,30 @@ class HelperRuntimeTests(unittest.TestCase):
         session.emit_handshake = False
         bus.callback("arrive", DeviceSeen("tablet-b", 0x18D1, 0x2D00, 0, True))
         self.assertEqual(called, [self.device])
+
+    def test_handshake_failure_stops_session_without_killing_event_path(self):
+        bus = FakeBus()
+        session = FakeSession()
+        session.emit_handshake = True
+        runtime = HelperRuntime(
+            self.store,
+            bus.subscribe,
+            bus.enumerate_present,
+            session,
+            handshake=lambda device: (_ for _ in ()).throw(RuntimeError("handshake failed")),
+        )
+        runtime.start()
+        bus.callback("arrive", self.device)
+        self.assertIn(("stop", "stop"), session.events)
+
+    def test_runtime_module_imports_from_repository_package(self):
+        result = subprocess.run(
+            [sys.executable, "-c", "import apps.windows.helper.main"],
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
 
 
 if __name__ == "__main__":
