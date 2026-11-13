@@ -13,7 +13,7 @@
 
 2026-11-13 软件轨进展见[G2 软件验证](validation/G2_SOFTWARE_2026-11-13.md)：运行时编排、WinUSB bulk/control 原生后端、正常身份分支、控制帧读循环和 U3 软件恢复已完成；U4 在当前用户 SID 限定的临时开发绑定下通过标准用户 `GET_PROTOCOL`、AOA START 和配件重枚举；正式签名、平板 SBC1 ready、拔线恢复和画面链路仍需真机。
 
-仓库已有 M0 最小 USB 实验源码、WinUSB 包、屏桥 IDD、连接状态机和视频协议原型，位于 `prototypes/usb/`、`drivers/windows/`、`apps/windows/` 与 `shared/protocol/`。详见[运行说明](../prototypes/usb/README.md)、[首轮验证报告](validation/M0_USB_2026-11-02.md)和上述 G1/G3 报告。配件态双向回传已有真机证据，但还不能显示扩展桌面，无 HDC 的正常模式起连也未验证。
+仓库已有 M0 最小 USB 实验源码、WinUSB 包、屏桥 IDD、连接状态机、视频协议和正式鸿蒙工程，位于 `prototypes/usb/`、`drivers/windows/`、`apps/windows/`、`apps/harmony/screenbridge/` 与 `shared/protocol/`。详见[运行说明](../prototypes/usb/README.md)、[首轮验证报告](validation/M0_USB_2026-11-02.md)和上述 G1/G3 报告。配件态双向回传和临时开发绑定下的正常模式起连已有证据，但还不能显示完整扩展桌面。
 
 ## 在另一台电脑获取工程
 
@@ -42,7 +42,7 @@ git pull --ff-only
 **当前下一任务：** 真机轨先记录临时绑定的 U4 开发证据，再回到 U3 拔线/停止恢复与 U5（四个独立结论）；软件轨继续安装签名正式 HAP、验证 `SBC1 ready/stop`、控制帧到显示会话的交接。换端口、重启保留、跨两类端口的长测仍无证据。USB 包与 IDD 包都是本机自签，证书不入库，公开发布签名未解决。
 
 1. 读取报告：开发机为七彩虹 B850M、Windows 11 10.0.26200。MSVC 14.44、WDK/SDK 10.0.26100、InfVerif/Inf2Cat/SignTool 已于 11-04 补齐；`oem121.inf`（USB）与 `oem138.inf`（IDD）由本机自签证书 `CN=ScreenBridge Development` 签名。历史问题码 28 属于 11-02，本轮未复测。
-2. 当前阻点：U3 的拔线与停止恢复、U5 汇总、跨端口/重启保留，以及 IDD 图像从驱动宿主交到用户进程。U4 已在无 HDC 条件下执行，平板枚举为 `12d1:107e`，但 Huawei `oem46.inf` 复合过滤驱动报问题码 39（`0xC000007B`），需要可回滚的正常模式驱动验证；不能把这次失败写成产品兼容通过。
+2. 当前阻点：U3 的拔线与停止恢复、U5 汇总、跨端口/重启保留，以及正式签名、SBC1 ready/stop 真机控制帧、USB 视频和鸿蒙解码。U4 的第一次观察记录了 Huawei `oem46.inf` 问题码 39；随后临时开发绑定已完成标准用户控制传输和 AOA 重枚举，不能把临时包写成发布兼容结论。
 3. 平板应用已签名安装，11-04 真机 echo 已通过；2026-11-13 平板关闭 USB 调试并保持接线，Windows 看到 `12d1:107e`，但 PyUSB/WinUSB 无可用子接口。U4 脱敏记录见 `docs/validation/G1_USB_ACCESS.md`。
 4. 新电脑按原型 README 建立 Python 虚拟环境、运行测试与构建脚本。SDK 使用 DevEco 内置 API 26；鸿蒙侧只用 DevEco Studio 及其内置 SDK，本地签名配置被忽略，不能通过 Git 迁移。
 5. 100 帧、边界帧和 60 秒连测已有证据；下一步先补拔线/停止恢复与正常模式起连，30 分钟长测和两类端口各 20 次插拔统一留到 G6，不重复计算。当前端口 PD 与线速仍未知。
@@ -52,7 +52,7 @@ git pull --ff-only
 
 ## 给下一次开发会话的上下文
 
-> 先读 AGENTS.md、README.md、目标、路线图、HANDOFF、方案、IMPLEMENTATION_PLAN.md、G1_USB_ACCESS.md、G3_IDD_2026-11-04.md 和首轮验证报告。用户已选定一次电脑配置、低占用后台、USB 扩展主线，目标 R01–R09 未变，无需重新选方案。2026-11-06 已把 `g1-usb-access` 的最新工作合入 `main`、清理误入库的构建产物，并跑通本机自动化基线（Python 23+27+7 项、Node 6 项，均为假端点/本地测试，不是真机验收）。真机已有配件态 WinUSB 访问、标准用户打开接口和 echo 回传证据；U4 已观察到 `12d1:107e`，但当前 Huawei 复合过滤驱动问题码 39 阻止无 HDC 起连；自动连接、驱动图像交接、完整画面链路或扩展桌面仍未通过。下一任务是为正常身份建立可回滚的驱动访问，再重试 U4；G3 可并行。PD/非 PD、低占用、1080p60 都是待验收目标。USB 与 IDD 包仍是本机自签，公开发布签名和一次配置的跨端口保留未解决；不提交签名材料或设备个人标识。
+> 先读 AGENTS.md、README.md、目标、路线图、HANDOFF、方案、IMPLEMENTATION_PLAN.md、G1_USB_ACCESS.md、G3_IDD_2026-11-04.md 和首轮验证报告。用户已选定一次电脑配置、低占用后台、USB 扩展主线，目标 R01–R09 未变，无需重新选方案。2026-11-13 软件轨通过 helper 56、streaming 9、USB 23、Node 8 项测试；真机已有配件态回传、临时开发绑定下的 U4 正常模式起连、G3 标准用户连续帧证据；正式签名、SBC1 ready/stop、USB 视频、平板解码、完整画面链路和跨端口保留仍未通过。PD/非 PD、低占用、1080p60 都是待验收目标。USB 与 IDD 包仍是本机自签，公开发布签名未解决；不提交签名材料或设备个人标识。
 
 ## 前期研究线索
 
